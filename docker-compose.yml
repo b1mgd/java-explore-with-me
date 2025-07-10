@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
 
   ewm-service:
@@ -6,30 +8,29 @@ services:
       dockerfile: Dockerfile
     container_name: main-service
     ports:
-      - "${MAIN_SERVER_PORTS}:${MAIN_SERVER_PORTS}"
+      - "8080:8080"
     environment:
-      SPRING_DATASOURCE_USERNAME: ${MAIN_SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${MAIN_SPRING_DATASOURCE_PASSWORD}
-      SPRING_DATASOURCE_URL: ${MAIN_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: explorewithme
+      SPRING_DATASOURCE_PASSWORD: explorewithme
+      SPRING_DATASOURCE_URL: jdbc:postgresql://main-postgres:5432/explorewithmemain
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_SHOW_SQL: true
     depends_on:
-      - evm-db
+      - main-postgres
 
-
-  evm-db:
+  main-postgres:
     image: postgres:16.1
     container_name: main-postgres
     ports:
-      - "${MAIN_POSTGRES_PORTS}:${MAIN_POSTGRES_PORTS}"
+      - "5431:5432"
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data/main/
     environment:
-      - POSTGRES_USER=${MAIN_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${MAIN_POSTGRES_PASSWORD}
-      - POSTGRES_DB=${MAIN_POSTGRES_DB}
+      - POSTGRES_USER=explorewithme
+      - POSTGRES_PASSWORD=explorewithme
+      - POSTGRES_DB=explorewithmemain
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -q -d $POSTGRES_DB -U $POSTGRES_USER" ]
+      test: [ "CMD-SHELL", "pg_isready -q -d explorewithmemain -U explorewithme" ]
       timeout: 5s
       interval: 5s
       retries: 10
@@ -40,27 +41,27 @@ services:
       dockerfile: Dockerfile
     container_name: stats-service
     ports:
-      - "${STATS_SERVER_PORTS}:${STATS_SERVER_PORTS}"
+      - "9090:9090"
     environment:
-      SPRING_DATASOURCE_USERNAME: ${STATS_SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${STATS_SPRING_DATASOURCE_PASSWORD}
-      SPRING_DATASOURCE_URL: ${STATS_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: explorewithme
+      SPRING_DATASOURCE_PASSWORD: explorewithme
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-postgres:5432/explorewithmestats
     depends_on:
-      - stats-db
+      - stats-postgres
 
-  stats-db:
+  stats-postgres:
     image: postgres:16.1
     container_name: stats-postgres
     ports:
-      - "${STATS_POSTGRES_PORTS}:${STATS_POSTGRES_PORTS}"
+      - "5432:5432"
     volumes:
       - ./volumes/postgres:/var/lib/postgresql/data/stats/
     environment:
-      - POSTGRES_USER=${STATS_POSTGRES_USER}
-      - POSTGRES_PASSWORD=${STATS_POSTGRES_PASSWORD}
-      - POSTGRES_DB=${STATS_POSTGRES_DB}
+      - POSTGRES_USER=explorewithme
+      - POSTGRES_PASSWORD=explorewithme
+      - POSTGRES_DB=explorewithmestats
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -q -d $POSTGRES_DB -U $POSTGRES_USER" ]
+      test: [ "CMD-SHELL", "pg_isready -q -d explorewithmestats -U explorewithme" ]
       timeout: 5s
       interval: 5s
       retries: 10

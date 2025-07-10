@@ -1,11 +1,11 @@
 server:
-  port: ${MAIN_SERVER_PORTS}
+  port: 8080
 
 spring:
   datasource:
     driver-class-name: org.h2.Driver
-    username: ${MAIN_SPRING_DATASOURCE_USERNAME}
-    password: ${MAIN_SPRING_DATASOURCE_PASSWORD}
+    username: sa
+    password:
     url: jdbc:h2:mem:main_test_db
   jpa:
     hibernate:

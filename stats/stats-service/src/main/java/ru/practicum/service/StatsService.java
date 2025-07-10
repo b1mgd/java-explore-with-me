@@ -2,13 +2,14 @@ package ru.practicum.service;
 
 import ru.practicum.model.dto.HitDto;
 import ru.practicum.model.dto.HitPost;
-import ru.practicum.model.dto.ViewStats;
+import ru.practicum.model.dto.StatsDto;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface StatsService {
 
     HitDto save(HitPost hitPost);
 
-    ViewStats findAllStats(LocalDateTime start, LocalDateTime end, String[] uri, Boolean unique);
+    List<StatsDto> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uri, Boolean unique);
 }

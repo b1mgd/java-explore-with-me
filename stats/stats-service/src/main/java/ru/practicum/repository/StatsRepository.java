@@ -1,23 +1,14 @@
 package ru.practicum.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
 import ru.practicum.model.Hit;
-import ru.practicum.model.dto.ViewStats;
+import ru.practicum.model.Stats;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Repository
-public interface StatsRepository extends JpaRepository<Hit, Long> {
+public interface StatsRepository {
 
-    @Query(
-            value = """
-            SELECT app, uri, COUNT(uri) 
-            FROM hits
-            GROUP BY app
-            WHERE timestamp IN 
-                    """,
-            nativeQuery = true)
-    ViewStats findAllStats(LocalDateTime start, LocalDateTime end, String[] uri, Boolean unique);
+    Hit save(Hit hit);
+
+    List<Stats> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
 }

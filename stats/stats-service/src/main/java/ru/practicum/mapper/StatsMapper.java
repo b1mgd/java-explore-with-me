@@ -1,14 +1,11 @@
 package ru.practicum.mapper;
 
 import org.mapstruct.Mapper;
-import ru.practicum.model.Hit;
-import ru.practicum.model.dto.HitDto;
-import ru.practicum.model.dto.HitPost;
+import ru.practicum.model.Stats;
+import ru.practicum.model.dto.StatsDto;
 
 @Mapper(componentModel = "spring")
 public interface StatsMapper {
 
-    Hit mapToHit(HitPost hitPost);
-
-    HitDto mapToHitDto(Hit hit);
+    StatsDto mapToStatsDto(Stats stats);
 }

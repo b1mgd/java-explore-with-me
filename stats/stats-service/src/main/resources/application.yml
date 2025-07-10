@@ -1,12 +1,12 @@
 server:
-  port: ${STATS_SERVER_PORTS}
+  port: 9090
 
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    username: ${STATS_SPRING_DATASOURCE_USERNAME}
-    password: ${STATS_SPRING_DATASOURCE_PASSWORD}
-    url: ${STATS_SPRING_DATASOURCE_URL}
+    username: explorewithme
+    password: explorewithme
+    url: jdbc:postgresql://stats-postgres:5432/explorewithmestats
 
 logging:
   level:
