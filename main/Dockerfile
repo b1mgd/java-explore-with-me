@@ -1,0 +1,5 @@
+FROM eclipse-temurin:21-jdk-jammy
+WORKDIR /app
+ARG JAR_FILE=app.jar
+COPY target/${JAR_FILE} app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

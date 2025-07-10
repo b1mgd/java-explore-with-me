@@ -1,14 +1,66 @@
 services:
-  stats-server:
+
+  ewm-service:
+    build:
+      context: ./main
+      dockerfile: Dockerfile
+    container_name: main-service
     ports:
-      - "9090:9090"
+      - "${MAIN_SERVER_PORTS}:${MAIN_SERVER_PORTS}"
+    environment:
+      SPRING_DATASOURCE_USERNAME: ${MAIN_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${MAIN_SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATASOURCE_URL: ${MAIN_SPRING_DATASOURCE_URL}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_SHOW_SQL: true
+    depends_on:
+      - evm-db
+
+
+  evm-db:
+    image: postgres:16.1
+    container_name: main-postgres
+    ports:
+      - "${MAIN_POSTGRES_PORTS}:${MAIN_POSTGRES_PORTS}"
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data/main/
+    environment:
+      - POSTGRES_USER=${MAIN_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${MAIN_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${MAIN_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -d $POSTGRES_DB -U $POSTGRES_USER" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  stats-service:
+    build:
+      context: ./stats
+      dockerfile: Dockerfile
+    container_name: stats-service
+    ports:
+      - "${STATS_SERVER_PORTS}:${STATS_SERVER_PORTS}"
+    environment:
+      SPRING_DATASOURCE_USERNAME: ${STATS_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${STATS_SPRING_DATASOURCE_PASSWORD}
+      SPRING_DATASOURCE_URL: ${STATS_SPRING_DATASOURCE_URL}
+    depends_on:
+      - stats-db
 
   stats-db:
     image: postgres:16.1
-
-  ewm-service:
+    container_name: stats-postgres
     ports:
-      - "8080:8080"
-
-  ewm-db:
-    image: postgres:16.1
+      - "${STATS_POSTGRES_PORTS}:${STATS_POSTGRES_PORTS}"
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data/stats/
+    environment:
+      - POSTGRES_USER=${STATS_POSTGRES_USER}
+      - POSTGRES_PASSWORD=${STATS_POSTGRES_PASSWORD}
+      - POSTGRES_DB=${STATS_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -d $POSTGRES_DB -U $POSTGRES_USER" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10

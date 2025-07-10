@@ -1,0 +1,14 @@
+server:
+  port: ${STATS_SERVER_PORTS}
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: ${STATS_SPRING_DATASOURCE_USERNAME}
+    password: ${STATS_SPRING_DATASOURCE_PASSWORD}
+    url: ${STATS_SPRING_DATASOURCE_URL}
+
+logging:
+  level:
+    root: info
+    ru.practicum: info

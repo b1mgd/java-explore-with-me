@@ -1,0 +1,14 @@
+server:
+  port: ${STATS_SERVER_PORTS}
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    username: ${STATS_SPRING_DATASOURCE_USERNAME}
+    password: ${STATS_SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:h2:mem:stats_test_db
+
+logging:
+  level:
+    root: info
+    ru.practicum: info

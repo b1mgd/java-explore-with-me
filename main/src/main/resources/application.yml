@@ -1,0 +1,18 @@
+server:
+  port: ${MAIN_SERVER_PORTS}
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: ${MAIN_SPRING_DATASOURCE_USERNAME}
+    password: ${MAIN_SPRING_DATASOURCE_PASSWORD}
+    url: ${MAIN_SPRING_DATASOURCE_URL}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+logging:
+  level:
+    root: info
+    ru.practicum: info
