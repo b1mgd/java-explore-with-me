@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Arrays;
+
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
@@ -21,7 +23,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorMessage handleException(Exception e) {
-        log.warn(e.getMessage(), e);
-        return new ErrorMessage(e.getMessage());
+        log.warn(e.getMessage());
+        return new ErrorMessage(Arrays.toString(e.getStackTrace()));
     }
 }

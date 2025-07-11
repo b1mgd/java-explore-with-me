@@ -37,8 +37,8 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<StatsDto> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uri, Boolean unique) {
-        List<Stats> stats = statsRepository.findAllStats(start, end, uri, unique);
+    public List<StatsDto> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        List<Stats> stats = statsRepository.findAllStats(start, end, uris, unique);
         log.info("Получена информация по запросу статистики: {}", stats);
 
         return stats.stream()

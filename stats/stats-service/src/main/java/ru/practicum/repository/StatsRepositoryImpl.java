@@ -10,6 +10,7 @@ import ru.practicum.model.Stats;
 import ru.practicum.model.rowMapper.StatsRowMapper;
 
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +23,14 @@ public class StatsRepositoryImpl implements StatsRepository {
     private final JdbcTemplate jdbcTemplate;
     private final StatsRowMapper statsRowMapper;
 
+    /**
+     * При тестировании в H2 требуется удалить "RETURNING id" для корректной работы
+     */
     public Hit save(Hit hit) {
         String sql = """
                 INSERT INTO hits (app, uri, ip, timestamp)
                 VALUES (?, ?, ?, ?)
+                RETURNING id
                 """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -50,13 +55,13 @@ public class StatsRepositoryImpl implements StatsRepository {
     }
 
     public List<Stats> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        String countExpr = unique ? "DISTINCT" : "";
+        String countExpr = unique ? "DISTINCT ip" : "ip";
         String uriExpr = "";
         boolean uriFilter = uris != null && !uris.isEmpty();
 
         List<Object> params = new ArrayList<>();
-        params.add(start);
-        params.add(end);
+        params.add(Timestamp.valueOf(start));
+        params.add(Timestamp.valueOf(end));
 
         if (uriFilter) {
             StringBuilder sb = new StringBuilder();
@@ -71,11 +76,12 @@ public class StatsRepositoryImpl implements StatsRepository {
         }
 
         String sql = """
-                SELECT app, uri, COUNT(%s ip) AS hit
+                SELECT app, uri, COUNT(%s) AS hits
                 FROM hits
                 WHERE timestamp BETWEEN ? AND ?
                 %s
                 GROUP BY app, uri
+                ORDER BY hits DESC
                 """.formatted(countExpr, uriExpr);
 
         return jdbcTemplate.query(sql, statsRowMapper, params.toArray());

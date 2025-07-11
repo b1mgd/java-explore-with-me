@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
 
-  ewm-service:
+  main-service:
     build:
       context: ./main
       dockerfile: Dockerfile
@@ -24,7 +22,7 @@ services:
     ports:
       - "5431:5432"
     volumes:
-      - ./volumes/postgres:/var/lib/postgresql/data/main/
+      - ./volumes/main-postgres:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=explorewithme
       - POSTGRES_PASSWORD=explorewithme
@@ -37,7 +35,7 @@ services:
 
   stats-service:
     build:
-      context: ./stats
+      context: ./stats/stats-service
       dockerfile: Dockerfile
     container_name: stats-service
     ports:
@@ -55,7 +53,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./volumes/postgres:/var/lib/postgresql/data/stats/
+      - ./volumes/stats-postgres:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=explorewithme
       - POSTGRES_PASSWORD=explorewithme

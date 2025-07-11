@@ -24,17 +24,20 @@ public class StatsControllerImpl implements StatsController {
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
     public HitDto save(@RequestBody HitPost hitPost) {
-        log.info("Запрос на сохранение посещения: {}", hitPost);
+        log.info("Сервером получен запрос на сохранение посещения: {}", hitPost);
         return statsService.save(hitPost);
     }
 
     @Override
-    public List<StatsDto> findAllStats(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
-                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-                                       @RequestParam List<String> uri,
-                                       @RequestParam(defaultValue = "false") Boolean unique) {
-        log.info("Запрос на предоставление статистики со следующими параметрами.%n" +
-                "start: {}%n, end: {}%n, uri: {}%n, unique: {}", start, end, uri, unique);
-        return statsService.findAllStats(start, end, uri, unique);
+    @GetMapping("/stats")
+    @ResponseStatus(HttpStatus.OK)
+    public List<StatsDto> findAllStats(@RequestParam(name = "start") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                       @RequestParam(name = "end") @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+                                       @RequestParam(name = "uris", required = false) List<String> uris,
+                                       @RequestParam(name = "unique", defaultValue = "false") Boolean unique) {
+        log.info("Сервером получен запрос на предоставление статистики со следующими параметрами. " +
+                "start: {}, end: {}, uri: {}, unique: {}", start, end, uris, unique);
+
+        return statsService.findAllStats(start, end, uris, unique);
     }
 }
