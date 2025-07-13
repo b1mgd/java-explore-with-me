@@ -1,14 +1,65 @@
 services:
-  stats-server:
-    ports:
-      - "9090:9090"
 
-  stats-db:
-    image: postgres:16.1
-
-  ewm-service:
+  main-service:
+    build:
+      context: ./main
+      dockerfile: Dockerfile
+    container_name: main-service
     ports:
       - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_USERNAME: explorewithme
+      SPRING_DATASOURCE_PASSWORD: explorewithme
+      SPRING_DATASOURCE_URL: jdbc:postgresql://main-postgres:5432/explorewithmemain
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_SHOW_SQL: true
+    depends_on:
+      - main-postgres
 
-  ewm-db:
+  main-postgres:
     image: postgres:16.1
+    container_name: main-postgres
+    ports:
+      - "5431:5432"
+    volumes:
+      - ./volumes/main-postgres:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=explorewithme
+      - POSTGRES_PASSWORD=explorewithme
+      - POSTGRES_DB=explorewithmemain
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -d explorewithmemain -U explorewithme" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+
+  stats-service:
+    build:
+      context: ./stats/stats-service
+      dockerfile: Dockerfile
+    container_name: stats-service
+    ports:
+      - "9090:9090"
+    environment:
+      SPRING_DATASOURCE_USERNAME: explorewithme
+      SPRING_DATASOURCE_PASSWORD: explorewithme
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-postgres:5432/explorewithmestats
+    depends_on:
+      - stats-postgres
+
+  stats-postgres:
+    image: postgres:16.1
+    container_name: stats-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/stats-postgres:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=explorewithme
+      - POSTGRES_PASSWORD=explorewithme
+      - POSTGRES_DB=explorewithmestats
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -d explorewithmestats -U explorewithme" ]
+      timeout: 5s
+      interval: 5s
+      retries: 10

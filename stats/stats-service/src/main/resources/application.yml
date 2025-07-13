@@ -1,0 +1,18 @@
+server:
+  port: 9090
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: explorewithme
+    password: explorewithme
+    url: jdbc:postgresql://stats-postgres:5432/explorewithmestats
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    root: info
+    ru.practicum: info
+    org.springframework.jdbc.datasource.init: debug
