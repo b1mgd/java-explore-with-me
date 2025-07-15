@@ -8,6 +8,7 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.dto.*;
+import ru.practicum.model.dto.params.EventParamFindAll;
 import ru.practicum.model.dto.params.EventParamFindAllUserEvents;
 import ru.practicum.model.dto.params.EventParamParticipationStatus;
 import ru.practicum.model.dto.params.EventParamUserPatch;
@@ -27,13 +28,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class EventServiceDefault implements EventServicePrivate {
+public class EventServiceDefault implements EventServicePrivate, EventServiceAdmin {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EventMapper eventMapper;
 
+    /**
+     * [PRIVATE] Поиск событий, опубликованных текущим пользователем
+     */
     @Override
     @Transactional(readOnly = true)
     public List<EventShortDto> findAllUserEvents(EventParamFindAllUserEvents param) {
@@ -50,6 +54,9 @@ public class EventServiceDefault implements EventServicePrivate {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * [PRIVATE] Публикация события текущим пользователем
+     */
     @Override
     public EventDto saveEvent(long userId, EventUserPost eventPost) {
         checkIfEventUserPostIsCorrect(userId, eventPost);
@@ -63,6 +70,9 @@ public class EventServiceDefault implements EventServicePrivate {
         return eventMapper.mapToEventDto(savedEvent);
     }
 
+    /**
+     * [PRIVATE] Поиск конкретного события, опубликованного текущим пользователем
+     */
     @Override
     @Transactional(readOnly = true)
     public EventDto findSavedEventById(long userId, long eventId) {
@@ -73,6 +83,8 @@ public class EventServiceDefault implements EventServicePrivate {
     }
 
     /**
+     * [PRIVATE] Редактирование события, опубликованного текущим пользователем
+     * <p>
      * как происходит перевод в отмененные события? [ADMIN]?
      * не тестировалось
      */
@@ -95,6 +107,8 @@ public class EventServiceDefault implements EventServicePrivate {
     }
 
     /**
+     * [PRIVATE] Получение всех заявок по событию пользователя
+     * <p>
      * TO-DO: ParticipationRequest Business logic
      */
     @Override
@@ -104,6 +118,8 @@ public class EventServiceDefault implements EventServicePrivate {
     }
 
     /**
+     * [PRIVATE] Модерация всех направленных заявок на участие в событии пользователя
+     * <p>
      * TO-DO: ParticipationRequest Business logic
      */
     /*
@@ -114,6 +130,24 @@ public class EventServiceDefault implements EventServicePrivate {
      */
     @Override
     public EventStatusUpdateResult reviewAllEventParticipationRequests(EventParamParticipationStatus param) {
+        return null;
+    }
+
+    /**
+     * [ADMIN] Поиск всех событий по параметрам
+     * делаем через queryDSL, specification?
+     */
+    @Override
+    public List<EventDto> findAllEvents(EventParamFindAll param) {
+
+        return List.of();
+    }
+
+    /**
+     * [ADMIN] Отклонение / публикация события
+     */
+    @Override
+    public EventDto updateEventAdmin(long eventId, EventAdminPatch eventPatch) {
         return null;
     }
 

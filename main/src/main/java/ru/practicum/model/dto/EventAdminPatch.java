@@ -1,8 +1,12 @@
 package ru.practicum.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.*;
-import lombok.*;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.model.entity.utility.Location;
 
 import java.time.LocalDateTime;
@@ -10,10 +14,10 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EventUserPatch {
+public class EventAdminPatch {
 
     public enum StateAction {
-        SEND_TO_REVIEW, CANCEL_REVIEW
+        PUBLISH_EVENT, REJECT_EVENT
     }
 
     @PositiveOrZero
