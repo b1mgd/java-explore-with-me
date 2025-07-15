@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoryRequest {
+public class CategoryChange {
 
     @NotBlank(message = "Категория события должна быть заполнена")
     @Size(min = 1, max = 50, message = "Некорректный формат названия категории")

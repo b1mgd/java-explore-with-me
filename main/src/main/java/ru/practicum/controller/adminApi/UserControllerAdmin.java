@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.model.dto.UserDto;
-import ru.practicum.model.dto.UserGetParam;
+import ru.practicum.model.dto.params.UserParamAdminFindAll;
 import ru.practicum.model.dto.UserPost;
 import ru.practicum.service.UserService;
 
@@ -30,9 +30,9 @@ public class UserControllerAdmin implements UserController {
     public List<UserDto> findAllUsers(@RequestParam(name = "ids", required = false) List<Long> ids,
                                       @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
                                       @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
-        log.info("Запрос от клиента на получение списка пользователя с параметрами ids: {}, from: {}, size: {} ", ids, from, size);
+        log.info("Запрос от клиента на получение списка пользователей с параметрами ids: {}, from: {}, size: {} ", ids, from, size);
         return userService.findAllUsers(
-                UserGetParam.builder()
+                UserParamAdminFindAll.builder()
                         .ids(ids == null ? Collections.emptyList() : ids)
                         .from(from)
                         .size(size)

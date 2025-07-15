@@ -1,4 +1,4 @@
-package ru.practicum.model.dto;
+package ru.practicum.model.dto.params;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @Builder
 @AllArgsConstructor
-public class UserGetParam {
+public class UserParamAdminFindAll {
     private List<Long> ids;
     private Integer from;
     private Integer size;

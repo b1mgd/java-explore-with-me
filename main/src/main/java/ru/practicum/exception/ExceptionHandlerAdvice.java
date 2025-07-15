@@ -26,7 +26,7 @@ public class ExceptionHandlerAdvice {
     @AllArgsConstructor
     public static class ApiError {
 
-        private List<String> errors;
+//        private List<String> errors;
 
         private String message;
 
@@ -43,11 +43,11 @@ public class ExceptionHandlerAdvice {
     public ApiError handleBadRequestException(BadRequestException e) {
         log.warn("Запрос составлен некорректно: {}", e.getMessage());
         return ApiError.builder()
-                .errors(
-                        Arrays.stream(e.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.toList())
-                )
+//                .errors(
+//                        Arrays.stream(e.getStackTrace())
+//                                .map(StackTraceElement::toString)
+//                                .collect(Collectors.toList())
+//                )
                 .message(e.getMessage())
                 .reason("Запрос составлен некорректно")
                 .status(HttpStatus.BAD_REQUEST.toString())
@@ -60,11 +60,11 @@ public class ExceptionHandlerAdvice {
     public ApiError handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.warn("Ошибка валидации переданных в теле запроса параметров: {}", e.getMessage());
         return ApiError.builder()
-                .errors(
-                        Arrays.stream(e.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.toList())
-                )
+//                .errors(
+//                        Arrays.stream(e.getStackTrace())
+//                                .map(StackTraceElement::toString)
+//                                .collect(Collectors.toList())
+//                )
                 .message(e.getMessage())
                 .reason("Ошибка валидации переданных в теле запроса параметров")
                 .status(HttpStatus.BAD_REQUEST.toString())
@@ -77,11 +77,11 @@ public class ExceptionHandlerAdvice {
     public ApiError handleConstraintViolationException(ConstraintViolationException e) {
         log.warn("Ошибка валидации переменных запроса: {}", e.getMessage());
         return ApiError.builder()
-                .errors(
-                        Arrays.stream(e.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.toList())
-                )
+//                .errors(
+//                        Arrays.stream(e.getStackTrace())
+//                                .map(StackTraceElement::toString)
+//                                .collect(Collectors.toList())
+//                )
                 .message(e.getMessage())
                 .reason("Ошибка валидации переменных запроса")
                 .status(HttpStatus.BAD_REQUEST.toString())
@@ -94,11 +94,11 @@ public class ExceptionHandlerAdvice {
     public ApiError handleNotFoundException(NotFoundException e) {
         log.warn("Результаты по запросу не были найдены: {}", e.getMessage());
         return ApiError.builder()
-                .errors(
-                        Arrays.stream(e.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.toList())
-                )
+//                .errors(
+//                        Arrays.stream(e.getStackTrace())
+//                                .map(StackTraceElement::toString)
+//                                .collect(Collectors.toList())
+//                )
                 .message(e.getMessage())
                 .reason("Результаты по запросу не были найдены")
                 .status(HttpStatus.NOT_FOUND.toString())
@@ -111,11 +111,11 @@ public class ExceptionHandlerAdvice {
     public ApiError handleConflictException(ConflictException e) {
         log.warn("Нарушение целостности данных: {}", e.getMessage());
         return ApiError.builder()
-                .errors(
-                        Arrays.stream(e.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.toList())
-                )
+//                .errors(
+//                        Arrays.stream(e.getStackTrace())
+//                                .map(StackTraceElement::toString)
+//                                .collect(Collectors.toList())
+//                )
                 .message(e.getMessage())
                 .reason("Нарушение целостности данных")
                 .status(HttpStatus.CONFLICT.toString())
@@ -128,11 +128,11 @@ public class ExceptionHandlerAdvice {
     public ApiError handleException(Exception e) {
         log.warn("Внутренняя ошибка сервера: {}", e.getMessage());
         return ApiError.builder()
-                .errors(
-                        Arrays.stream(e.getStackTrace())
-                                .map(StackTraceElement::toString)
-                                .collect(Collectors.toList())
-                )
+//                .errors(
+//                        Arrays.stream(e.getStackTrace())
+//                                .map(StackTraceElement::toString)
+//                                .collect(Collectors.toList())
+//                )
                 .message(e.getMessage())
                 .reason("Непредвиденная ошибка сервера")
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())

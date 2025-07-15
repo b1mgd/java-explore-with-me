@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.model.dto.CategoryChange;
 import ru.practicum.model.dto.CategoryDto;
-import ru.practicum.model.dto.CategoryRequest;
 import ru.practicum.service.CategoryServiceAdmin;
 
 @RestController
@@ -21,7 +21,7 @@ public class CategoryControllerAdmin implements CategoryController {
     @Override
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryDto save(@RequestBody CategoryRequest categoryRequest) {
+    public CategoryDto save(@RequestBody CategoryChange categoryRequest) {
         log.info("Запрос от клиента на добавление новой категории: {}", categoryRequest);
         return categoryService.save(categoryRequest);
     }
@@ -29,7 +29,7 @@ public class CategoryControllerAdmin implements CategoryController {
     @Override
     @PatchMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryDto update(@RequestBody CategoryRequest categoryRequest,
+    public CategoryDto update(@RequestBody CategoryChange categoryRequest,
                               @PathVariable(name = "catId") Long catId) {
         log.info("Запрос от клиента на изменение существующей категории с catId: {}, request: {}", catId, categoryRequest);
         return categoryService.update(categoryRequest, catId);

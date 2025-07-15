@@ -9,7 +9,7 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.UserMapper;
 import ru.practicum.model.dto.UserDto;
-import ru.practicum.model.dto.UserGetParam;
+import ru.practicum.model.dto.params.UserParamAdminFindAll;
 import ru.practicum.model.dto.UserPost;
 import ru.practicum.model.entity.User;
 import ru.practicum.repository.UserRepository;
@@ -28,7 +28,7 @@ public class UserServiceDefault implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserDto> findAllUsers(UserGetParam param) {
+    public List<UserDto> findAllUsers(UserParamAdminFindAll param) {
         List<User> users;
 
         if (param.getIds().isEmpty()) {

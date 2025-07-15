@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CategoryMapper;
+import ru.practicum.model.dto.CategoryChange;
 import ru.practicum.model.dto.CategoryDto;
-import ru.practicum.model.dto.CategoryRequest;
 import ru.practicum.model.entity.Category;
 import ru.practicum.repository.CategoryRepository;
 
@@ -29,7 +29,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
      * [ADMIN] Добавление новой категории
      */
     @Override
-    public CategoryDto save(CategoryRequest categoryRequest) {
+    public CategoryDto save(CategoryChange categoryRequest) {
         checkNameUnique(categoryRequest.getName());
         Category category = categoryMapper.mapToCategory(categoryRequest);
 
@@ -43,7 +43,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
      * [ADMIN] Изменение существующей категории
      */
     @Override
-    public CategoryDto update(CategoryRequest categoryRequest, long catId) {
+    public CategoryDto update(CategoryChange categoryRequest, long catId) {
         checkCategoryExists(catId);
         checkNameUnique(categoryRequest.getName());
 
@@ -108,7 +108,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
     private void checkNameUnique(String name) {
         Optional<Category> category = categoryRepository.findByName(name);
 
-        if (category.isEmpty()) {
+        if (category.isPresent()) {
             throw new ConflictException("Попытка добавить уже существующее название категории: " + name);
         }
     }

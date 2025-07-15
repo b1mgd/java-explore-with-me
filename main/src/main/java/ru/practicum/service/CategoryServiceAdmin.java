@@ -1,13 +1,13 @@
 package ru.practicum.service;
 
 import ru.practicum.model.dto.CategoryDto;
-import ru.practicum.model.dto.CategoryRequest;
+import ru.practicum.model.dto.CategoryChange;
 
 public interface CategoryServiceAdmin {
 
-    CategoryDto save(CategoryRequest categoryRequest);
+    CategoryDto save(CategoryChange categoryRequest);
 
-    CategoryDto update(CategoryRequest categoryRequest, long catId);
+    CategoryDto update(CategoryChange categoryRequest, long catId);
 
     void delete(long catId);
 }

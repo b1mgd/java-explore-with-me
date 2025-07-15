@@ -19,3 +19,6 @@ logging:
   level:
     root: info
     ru.practicum: info
+#    org.springframework.web: DEBUG
+#    org.springframework.http.converter: DEBUG
+#    org.springframework.web.servlet.mvc.method.annotation: DEBUG
