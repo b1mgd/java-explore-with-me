@@ -1,13 +1,11 @@
 package ru.practicum.mapper;
 
 import org.mapstruct.*;
-import ru.practicum.model.dto.EventDto;
-import ru.practicum.model.dto.EventShortDto;
-import ru.practicum.model.dto.EventUserPatch;
-import ru.practicum.model.dto.EventUserPost;
+import ru.practicum.model.dto.*;
 import ru.practicum.model.entity.Category;
 import ru.practicum.model.entity.Event;
 import ru.practicum.model.entity.User;
+import ru.practicum.model.entity.utility.State;
 
 @Mapper(componentModel = "spring", uses = {UserMapper.class, CategoryMapper.class})
 public interface EventMapper {
@@ -24,6 +22,15 @@ public interface EventMapper {
     void updateEventFromUserPatch(@MappingTarget Event event,
                                   Category category,
                                   EventUserPatch eventUserPatch);
+
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "state", source = "state")
+    @Mapping(target = "category", source = "category")
+    void updateEventFromAdminPatch(@MappingTarget Event event,
+                                   Category category,
+                                   State state,
+                                   EventAdminPatch eventAdminPatch);
 
     EventDto mapToEventDto(Event event);
 

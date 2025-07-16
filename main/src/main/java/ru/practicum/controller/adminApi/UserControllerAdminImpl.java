@@ -20,7 +20,7 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 @Slf4j
-public class UserController implements UserControllerAdmin {
+public class UserControllerAdminImpl implements UserControllerAdmin {
 
     private final UserService userService;
 

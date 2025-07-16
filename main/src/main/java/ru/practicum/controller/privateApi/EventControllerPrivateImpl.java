@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class EventController implements EventControllerPrivate {
+public class EventControllerPrivateImpl implements EventControllerPrivate {
 
     private final EventServicePrivate eventService;
 

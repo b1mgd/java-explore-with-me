@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class CategoryController implements CategoryControllerPublic {
+public class CategoryControllerPublicImpl implements CategoryControllerPublic {
 
     private final CategoryServicePublic categoryService;
 

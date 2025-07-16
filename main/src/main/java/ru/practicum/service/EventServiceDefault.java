@@ -1,5 +1,8 @@
 package ru.practicum.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,7 @@ import ru.practicum.model.dto.params.EventParamParticipationStatus;
 import ru.practicum.model.dto.params.EventParamUserPatch;
 import ru.practicum.model.entity.Category;
 import ru.practicum.model.entity.Event;
+import ru.practicum.model.entity.QEvent;
 import ru.practicum.model.entity.User;
 import ru.practicum.model.entity.utility.State;
 import ru.practicum.repository.CategoryRepository;
@@ -33,7 +37,10 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+
     private final EventMapper eventMapper;
+
+    private final JPAQueryFactory queryFactory;
 
     /**
      * [PRIVATE] Поиск событий, опубликованных текущим пользователем
@@ -76,7 +83,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
     @Override
     @Transactional(readOnly = true)
     public EventDto findSavedEventById(long userId, long eventId) {
-        Event event = getEventById(userId, eventId);
+        Event event = getEventByIdAndUserId(userId, eventId);
         log.info("Найдено мероприятие: {}", event);
 
         return eventMapper.mapToEventDto(event);
@@ -84,9 +91,6 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
 
     /**
      * [PRIVATE] Редактирование события, опубликованного текущим пользователем
-     * <p>
-     * как происходит перевод в отмененные события? [ADMIN]?
-     * не тестировалось
      */
     @Override
     public EventDto updateSavedEvent(EventParamUserPatch param) {
@@ -96,7 +100,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
 
         checkIfEventUserPatchIsCorrect(userId, eventId, eventPatch);
 
-        Event event = getEventById(userId, eventId);
+        Event event = getEventByIdAndUserId(userId, eventId);
         Category category = getCategoryById(eventPatch.getCategory());
         eventMapper.updateEventFromUserPatch(event, category, eventPatch);
 
@@ -108,7 +112,6 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
 
     /**
      * [PRIVATE] Получение всех заявок по событию пользователя
-     * <p>
      * TO-DO: ParticipationRequest Business logic
      */
     @Override
@@ -119,7 +122,6 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
 
     /**
      * [PRIVATE] Модерация всех направленных заявок на участие в событии пользователя
-     * <p>
      * TO-DO: ParticipationRequest Business logic
      */
     /*
@@ -135,12 +137,15 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
 
     /**
      * [ADMIN] Поиск всех событий по параметрам
-     * делаем через queryDSL, specification?
      */
     @Override
     public List<EventDto> findAllEvents(EventParamFindAll param) {
+        List<Event> events = findAllByQueryDSL(param);
+        log.info("Получены результаты в соответствии с динамическим запросов: {}", events);
 
-        return List.of();
+        return events.stream()
+                .map(eventMapper::mapToEventDto)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -148,20 +153,65 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
      */
     @Override
     public EventDto updateEventAdmin(long eventId, EventAdminPatch eventPatch) {
-        return null;
+        checkIfEventAdminPatchIsCorrect(eventId, eventPatch);
+
+        State state = switch (eventPatch.getStateAction()) {
+            case PUBLISH_EVENT -> State.PUBLISHED;
+            case REJECT_EVENT -> State.CANCELLED;
+        };
+
+        Event event = getEventByIdAdmin(eventId);
+        Category category;
+
+        if (eventPatch.getCategory() != null) {
+            category = getCategoryById(eventPatch.getCategory());
+        } else {
+            category = event.getCategory();
+        }
+
+        eventMapper.updateEventFromAdminPatch(event, category, state, eventPatch);
+
+        Event updatedEvent = eventRepository.save(event);
+        log.info("Событие успешно прошло модерацию администратором: {}", updatedEvent);
+
+        return eventMapper.mapToEventDto(updatedEvent);
+    }
+
+    private void checkIfEventAdminPatchIsCorrect(long eventId, EventAdminPatch eventAdminPatch) {
+//        checkIfAdminEventDateIsCorrect(eventAdminPatch.getEventDate());
+        Event event = getEventByIdAdmin(eventId);
+        checkIfAdminEventDateIsCorrect(event.getEventDate());
+        checkIfEventIsPending(eventId);
+    }
+
+    private void checkIfEventIsPending(long eventId) {
+        State state = eventRepository.findStateById(eventId);
+
+        if (!state.equals(State.PENDING)) {
+            throw new ConflictException("Модерация событий, не ожидающих одобрения, не допускается");
+        }
+    }
+
+    private void checkIfAdminEventDateIsCorrect(LocalDateTime dateTime) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime referenceDateTime = dateTime.minusHours(1);
+
+        if (referenceDateTime.isBefore(now)) {
+            throw new ConflictException("Попытка создать мероприятие менее чем за 2 ч. до начала");
+        }
     }
 
     private void checkIfEventUserPostIsCorrect(long userId, EventUserPost eventUserPost) {
         LocalDateTime eventDate = eventUserPost.getEventDate();
-        checkIfEventDateIsCorrect(eventDate);
+        checkIfUserEventDateIsCorrect(eventDate);
     }
 
     private void checkIfEventUserPatchIsCorrect(long userId, long eventId, EventUserPatch eventUserPatch) {
         checkIfEventIsPublished(eventId);
-        checkIfEventDateIsCorrect(eventUserPatch.getEventDate());
+        checkIfUserEventDateIsCorrect(eventUserPatch.getEventDate());
 
-        Event event = getEventById(userId, eventId);
-        checkIfEventDateIsCorrect(event.getEventDate());
+        Event event = getEventByIdAndUserId(userId, eventId);
+        checkIfUserEventDateIsCorrect(event.getEventDate());
     }
 
     private void checkIfUserExists(long userId) {
@@ -172,7 +222,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         }
     }
 
-    private void checkIfEventDateIsCorrect(LocalDateTime dateTime) {
+    private void checkIfUserEventDateIsCorrect(LocalDateTime dateTime) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime referenceDateTime = dateTime.minusHours(2);
 
@@ -187,10 +237,14 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         if (state.equals(State.PUBLISHED)) {
             throw new ConflictException("Внесение изменений в опубликованное мероприятие не допускается");
         }
-
     }
 
-    private Event getEventById(long userId, long eventId) {
+    private Event getEventByIdAdmin(long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(String.format("Мероприятие с eventId: %d не было найдено", eventId)));
+    }
+
+    private Event getEventByIdAndUserId(long userId, long eventId) {
         return eventRepository.findSavedEventById(userId, eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Мероприятие с eventId: %d не было найдено", eventId)));
     }
@@ -203,5 +257,46 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
     private Category getCategoryById(long catId) {
         return categoryRepository.findById(catId)
                 .orElseThrow(() -> new NotFoundException(String.format("Категория с catId: %d не была найден", catId)));
+    }
+
+    private List<Event> findAllByQueryDSL(EventParamFindAll param) {
+        QEvent event = QEvent.event;
+
+        BooleanExpression predicate = buildBooleanExpression(param, event);
+
+        return queryFactory
+                .selectFrom(event)
+                .join(event.initiator).fetchJoin()
+                .join(event.category).fetchJoin()
+                .where(predicate)
+                .offset(param.getFrom())
+                .limit(param.getSize())
+                .fetch();
+    }
+
+    private BooleanExpression buildBooleanExpression(EventParamFindAll param, QEvent event) {
+        BooleanExpression predicate = Expressions.TRUE;
+
+        if (param.getUsers() != null && !param.getUsers().isEmpty()) {
+            predicate = predicate.and(event.initiator.id.in(param.getUsers()));
+        }
+
+        if (param.getStates() != null && !param.getStates().isEmpty()) {
+            predicate = predicate.and(event.state.in(param.getStates()));
+        }
+
+        if (param.getCategories() != null && !param.getCategories().isEmpty()) {
+            predicate = predicate.and(event.category.id.in(param.getCategories()));
+        }
+
+        if (param.getRangeStart() != null) {
+            predicate = predicate.and(event.eventDate.goe(param.getRangeStart()));
+        }
+
+        if (param.getRangeEnd() != null) {
+            predicate = predicate.and(event.eventDate.loe(param.getRangeEnd()));
+        }
+
+        return predicate;
     }
 }

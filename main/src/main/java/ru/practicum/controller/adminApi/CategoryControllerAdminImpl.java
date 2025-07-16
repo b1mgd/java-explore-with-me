@@ -14,7 +14,7 @@ import ru.practicum.service.CategoryServiceAdmin;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class CategoryController implements CategoryControllerAdmin {
+public class CategoryControllerAdminImpl implements CategoryControllerAdmin {
 
     private final CategoryServiceAdmin categoryService;
 

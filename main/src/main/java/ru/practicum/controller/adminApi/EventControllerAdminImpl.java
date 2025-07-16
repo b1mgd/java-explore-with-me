@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-public class EventController implements EventControllerAdmin {
+public class EventControllerAdminImpl implements EventControllerAdmin {
 
     private final EventServiceAdmin eventService;
 
