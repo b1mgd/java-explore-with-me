@@ -1,5 +1,6 @@
 package ru.practicum.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
@@ -14,20 +15,32 @@ import java.util.Optional;
 @Repository
 public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
 
-    @Query("SELECT e FROM Event e " +
-            "WHERE e.initiator.id = :userId " +
-            "ORDER BY e.id " +
-            "LIMIT :size " +
-            "OFFSET :from ")
+    @EntityGraph(attributePaths = {"initiator", "category"})
+    @Query(value = """
+            SELECT e FROM Event e
+            WHERE e.initiator.id = :userId
+            ORDER BY e.id
+            LIMIT :size
+            OFFSET :from
+            """)
     List<Event> findAllEvents(@Param("userId") long userId,
                               @Param("from") int from,
                               @Param("size") int size);
 
-    @Query("SELECT e FROM Event e " +
-            "WHERE e.initiator.id = :userId AND e.id = :eventId ")
+    @EntityGraph(attributePaths = {"initiator", "category"})
+    @Query(value = """
+            SELECT e FROM Event e
+            WHERE e.initiator.id = :userId AND e.id = :eventId
+            """)
     Optional<Event> findSavedEventById(@Param("userId") long userId,
                                        @Param("eventId") long eventId);
 
-    @Query("SELECT e.state FROM Event e ")
-    State findStateById(long id);
+    @Query(value = """
+            SELECT e.state FROM Event e
+            WHERE e.id = :eventId
+            """)
+    State findStateById(@Param("eventId") long eventId);
+
+    @EntityGraph(attributePaths = {"initiator", "category"})
+    Optional<Event> findByIdAndStateEquals(long eventId, State state);
 }

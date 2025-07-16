@@ -3,7 +3,6 @@ package ru.practicum.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.model.entity.utility.Location;
 import ru.practicum.model.entity.utility.State;
 
@@ -48,15 +47,12 @@ public class Event {
 
     @Column(name = "created_on")
     @CreationTimestamp
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdOn;
 
     @Column(name = "published_on")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
 
     @Column(name = "event_date", nullable = false)
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @Enumerated(EnumType.STRING)

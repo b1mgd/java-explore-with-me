@@ -3,7 +3,6 @@ package ru.practicum.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.springframework.format.annotation.DateTimeFormat;
 import ru.practicum.model.entity.utility.Status;
 
 import java.time.LocalDateTime;
@@ -23,7 +22,6 @@ public class ParticipationRequest {
     private long id;
 
     @CreationTimestamp
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created;
 
     @Enumerated(EnumType.STRING)

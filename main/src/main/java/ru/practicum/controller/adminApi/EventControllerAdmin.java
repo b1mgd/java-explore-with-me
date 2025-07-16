@@ -12,13 +12,15 @@ import java.util.List;
 
 public interface EventControllerAdmin {
 
-    List<EventDto> findAllEvents(List<Long> users,
-                                 List<State> states,
-                                 List<Long> categories,
-                                 LocalDateTime rangeStart,
-                                 LocalDateTime rangeEnd,
-                                 @PositiveOrZero Integer from,
-                                 @Positive Integer size);
+    List<EventDto> findAllEvents(
+            List<Long> users,
+            List<State> states,
+            List<Long> categories,
+            LocalDateTime rangeStart,
+            LocalDateTime rangeEnd,
+            @PositiveOrZero Integer from,
+            @Positive Integer size
+    );
 
     EventDto updateEventAdmin(@Positive Long eventId,
                               @Valid EventAdminPatch eventPatch);

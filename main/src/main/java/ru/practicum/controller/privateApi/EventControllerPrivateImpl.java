@@ -25,9 +25,9 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @Override
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<EventShortDto> findAllUserEvents(@PathVariable(name = "userId") Long userId,
-                                                 @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                                 @RequestParam(name = "size", defaultValue = "10") Integer size) {
+    public List<EventShortDto> findAllUserEvents(@PathVariable Long userId,
+                                                 @RequestParam(defaultValue = "0") Integer from,
+                                                 @RequestParam(defaultValue = "10") Integer size) {
         log.info("Запрос от клиента на получение событий, добавленных текущим пользователем. " +
                 "userId: {}, from: {}, size: {}", userId, from, size);
         return eventService.findAllUserEvents(
@@ -42,7 +42,7 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @Override
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public EventDto saveEvent(@PathVariable(name = "userId") Long userId,
+    public EventDto saveEvent(@PathVariable Long userId,
                               @RequestBody EventUserPost eventPost) {
         log.info("Запрос от клиента на добавление нового события. userId: {}, eventPost: {}", userId, eventPost);
         return eventService.saveEvent(userId, eventPost);
@@ -51,8 +51,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @Override
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDto findESavedEventById(@PathVariable(name = "userId") Long userId,
-                                        @PathVariable(name = "eventId") Long eventId) {
+    public EventDto findESavedEventById(@PathVariable Long userId,
+                                        @PathVariable Long eventId) {
         log.info("Запрос от клиента с userId: {} на получение информации о сохраненном им событии c eventId: {}", userId, eventId);
         return eventService.findSavedEventById(userId, eventId);
     }
@@ -60,8 +60,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @Override
     @PatchMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDto updateSavedEvent(@PathVariable(name = "userId") Long userId,
-                                     @PathVariable(name = "eventId") Long eventId,
+    public EventDto updateSavedEvent(@PathVariable Long userId,
+                                     @PathVariable Long eventId,
                                      @RequestBody EventUserPatch eventPatch) {
         log.info("Запрос от клиента на изменение события с eventId: {}, " +
                 "добавленного текущим пользователем с userId: {}. eventPatch: {}", eventId, userId, eventPatch);
@@ -77,8 +77,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @Override
     @GetMapping("/{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(@PathVariable(name = "userId") Long userId,
-                                                                                @PathVariable(name = "eventId") Long eventId) {
+    public List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(@PathVariable Long userId,
+                                                                                @PathVariable Long eventId) {
         log.info("Запрос от клиента на получение информации о запросах на участие в событии, добавленном текущим пользователем. " +
                 "userId: {}, eventId: {}", userId, eventId);
         return eventService.findAllOtherUsersParticipationRequests(userId, eventId);
@@ -87,8 +87,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @Override
     @PatchMapping("{eventId}/requests")
     @ResponseStatus(HttpStatus.OK)
-    public EventStatusUpdateResult reviewAllEventParticipationRequests(@PathVariable(name = "userId") Long userId,
-                                                                       @PathVariable(name = "eventId") Long eventId,
+    public EventStatusUpdateResult reviewAllEventParticipationRequests(@PathVariable Long userId,
+                                                                       @PathVariable Long eventId,
                                                                        @RequestBody EventStatusUpdateRequest eventStatusUpdateRequest) {
         log.info("Запрос от клиента на изменение статуса заявок на участие в событии, добавленных текущим пользователем. " +
                 "userId: {}, eventId: {}, eventStatusUpdateRequest: {}", userId, eventId, eventStatusUpdateRequest);

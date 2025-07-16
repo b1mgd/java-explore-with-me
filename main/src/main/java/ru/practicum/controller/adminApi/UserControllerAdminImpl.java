@@ -27,9 +27,9 @@ public class UserControllerAdminImpl implements UserControllerAdmin {
     @Override
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> findAllUsers(@RequestParam(name = "ids", required = false) List<Long> ids,
-                                      @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero Integer from,
-                                      @RequestParam(name = "size", defaultValue = "10") @Positive Integer size) {
+    public List<UserDto> findAllUsers(@RequestParam(required = false) List<Long> ids,
+                                      @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                      @RequestParam(defaultValue = "10") @Positive Integer size) {
         log.info("Запрос от клиента на получение списка пользователей с параметрами ids: {}, from: {}, size: {} ", ids, from, size);
         return userService.findAllUsers(
                 UserParamAdminFindAll.builder()
@@ -51,7 +51,7 @@ public class UserControllerAdminImpl implements UserControllerAdmin {
     @Override
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable(name = "userId") Long userId) {
+    public void delete(@PathVariable Long userId) {
         log.info("Запрос от клиента на удаление пользователя с userId: {}", userId);
         userService.delete(userId);
     }

@@ -1,5 +1,6 @@
 package ru.practicum.service;
 
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -11,14 +12,12 @@ import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.dto.*;
-import ru.practicum.model.dto.params.EventParamFindAll;
-import ru.practicum.model.dto.params.EventParamFindAllUserEvents;
-import ru.practicum.model.dto.params.EventParamParticipationStatus;
-import ru.practicum.model.dto.params.EventParamUserPatch;
+import ru.practicum.model.dto.params.*;
 import ru.practicum.model.entity.Category;
 import ru.practicum.model.entity.Event;
 import ru.practicum.model.entity.QEvent;
 import ru.practicum.model.entity.User;
+import ru.practicum.model.entity.utility.Sort;
 import ru.practicum.model.entity.utility.State;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class EventServiceDefault implements EventServicePrivate, EventServiceAdmin {
+public class EventServiceDefault implements EventServicePrivate, EventServicePublic, EventServiceAdmin {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
@@ -51,7 +50,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         long userId = param.getUserId();
         int from = param.getFrom();
         int size = param.getSize();
-        checkIfUserExists(userId);
+        userExists(userId);
 
         List<Event> events = eventRepository.findAllEvents(userId, from, size);
         log.info("Найдены мероприятия по запросу: {}", events);
@@ -66,7 +65,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
      */
     @Override
     public EventDto saveEvent(long userId, EventUserPost eventPost) {
-        checkIfEventUserPostIsCorrect(userId, eventPost);
+        eventUserPostCorrect(userId, eventPost);
 
         User initiator = getUserById(userId);
         Category category = getCategoryById(eventPost.getCategory());
@@ -96,13 +95,25 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
     public EventDto updateSavedEvent(EventParamUserPatch param) {
         long userId = param.getUserId();
         long eventId = param.getEventId();
-        EventUserPatch eventPatch = new EventUserPatch();
+        EventUserPatch eventPatch = param.getEventPatch();
 
-        checkIfEventUserPatchIsCorrect(userId, eventId, eventPatch);
+        State state = switch (eventPatch.getStateAction()) {
+            case SEND_TO_REVIEW -> State.PENDING;
+            case CANCEL_REVIEW -> State.CANCELED;
+        };
+
+        eventUserPatchCorrect(userId, eventId, eventPatch);
 
         Event event = getEventByIdAndUserId(userId, eventId);
-        Category category = getCategoryById(eventPatch.getCategory());
-        eventMapper.updateEventFromUserPatch(event, category, eventPatch);
+        Category category;
+
+        if (eventPatch.getCategory() != null) {
+            category = getCategoryById(eventPatch.getCategory());
+
+        } else {
+            category = event.getCategory();
+        }
+        eventMapper.updateEventFromUserPatch(event, category, state, eventPatch);
 
         Event updatedEvent = eventRepository.save(event);
         log.info("Мероприятие обновлено: {}", updatedEvent);
@@ -139,9 +150,10 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
      * [ADMIN] Поиск всех событий по параметрам
      */
     @Override
-    public List<EventDto> findAllEvents(EventParamFindAll param) {
-        List<Event> events = findAllByQueryDSL(param);
-        log.info("Получены результаты в соответствии с динамическим запросов: {}", events);
+    @Transactional(readOnly = true)
+    public List<EventDto> findAllEvents(EventParamFindAllAdmin param) {
+        List<Event> events = findAllByQueryDSLAdmin(param);
+        log.info("Получены результаты в соответствии с динамическим запросом от администратора: {}", events);
 
         return events.stream()
                 .map(eventMapper::mapToEventDto)
@@ -153,11 +165,11 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
      */
     @Override
     public EventDto updateEventAdmin(long eventId, EventAdminPatch eventPatch) {
-        checkIfEventAdminPatchIsCorrect(eventId, eventPatch);
+        eventAdminPatchCorrect(eventId, eventPatch);
 
         State state = switch (eventPatch.getStateAction()) {
             case PUBLISH_EVENT -> State.PUBLISHED;
-            case REJECT_EVENT -> State.CANCELLED;
+            case REJECT_EVENT -> State.CANCELED;
         };
 
         Event event = getEventByIdAdmin(eventId);
@@ -177,14 +189,40 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         return eventMapper.mapToEventDto(updatedEvent);
     }
 
-    private void checkIfEventAdminPatchIsCorrect(long eventId, EventAdminPatch eventAdminPatch) {
-//        checkIfAdminEventDateIsCorrect(eventAdminPatch.getEventDate());
-        Event event = getEventByIdAdmin(eventId);
-        checkIfAdminEventDateIsCorrect(event.getEventDate());
-        checkIfEventIsPending(eventId);
+    /**
+     * [PUBLIC] Получение списка событий, удовлетворяющего параметрам
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventShortDto> findAllEvents(EventParamFindAllPublic param) {
+        List<Event> events = findAllByQueryDSLPublic(param);
+        log.info("Получены результаты в соответствии с динамическим публичным запросом : {}", events);
+
+        return events.stream()
+                .map(eventMapper::mapToEventShortDto)
+                .collect(Collectors.toList());
     }
 
-    private void checkIfEventIsPending(long eventId) {
+    /**
+     * [PUBLIC] Получение опубликованного события
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public EventDto findByEventId(Long eventId) {
+        Event event = getEventByIdAndStatePublic(eventId);
+        log.info("Получено событие: {}", event);
+
+        return eventMapper.mapToEventDto(event);
+    }
+
+    private void eventAdminPatchCorrect(long eventId, EventAdminPatch eventAdminPatch) {
+//        checkIfAdminEventDateIsCorrect(eventAdminPatch.getEventDate());
+        Event event = getEventByIdAdmin(eventId);
+        eventDateCorrectAdmin(event.getEventDate());
+        eventStatePending(eventId);
+    }
+
+    private void eventStatePending(long eventId) {
         State state = eventRepository.findStateById(eventId);
 
         if (!state.equals(State.PENDING)) {
@@ -192,7 +230,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         }
     }
 
-    private void checkIfAdminEventDateIsCorrect(LocalDateTime dateTime) {
+    private void eventDateCorrectAdmin(LocalDateTime dateTime) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime referenceDateTime = dateTime.minusHours(1);
 
@@ -201,20 +239,22 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         }
     }
 
-    private void checkIfEventUserPostIsCorrect(long userId, EventUserPost eventUserPost) {
+    private void eventUserPostCorrect(long userId, EventUserPost eventUserPost) {
         LocalDateTime eventDate = eventUserPost.getEventDate();
-        checkIfUserEventDateIsCorrect(eventDate);
+        eventDateCorrectPrivate(eventDate);
     }
 
-    private void checkIfEventUserPatchIsCorrect(long userId, long eventId, EventUserPatch eventUserPatch) {
-        checkIfEventIsPublished(eventId);
-        checkIfUserEventDateIsCorrect(eventUserPatch.getEventDate());
+    private void eventUserPatchCorrect(long userId, long eventId, EventUserPatch eventUserPatch) {
+        eventPublished(eventId);
+        if (eventUserPatch.getEventDate() != null) {
+            eventDateCorrectPrivate(eventUserPatch.getEventDate());
+        }
 
         Event event = getEventByIdAndUserId(userId, eventId);
-        checkIfUserEventDateIsCorrect(event.getEventDate());
+        eventDateCorrectPrivate(event.getEventDate());
     }
 
-    private void checkIfUserExists(long userId) {
+    private void userExists(long userId) {
         boolean exists = userRepository.existsById(userId);
 
         if (!exists) {
@@ -222,7 +262,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         }
     }
 
-    private void checkIfUserEventDateIsCorrect(LocalDateTime dateTime) {
+    private void eventDateCorrectPrivate(LocalDateTime dateTime) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime referenceDateTime = dateTime.minusHours(2);
 
@@ -231,12 +271,17 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
         }
     }
 
-    private void checkIfEventIsPublished(long eventId) {
+    private void eventPublished(long eventId) {
         State state = eventRepository.findStateById(eventId);
 
         if (state.equals(State.PUBLISHED)) {
             throw new ConflictException("Внесение изменений в опубликованное мероприятие не допускается");
         }
+    }
+
+    private Event getEventByIdAndStatePublic(long eventId) {
+        return eventRepository.findByIdAndStateEquals(eventId, State.PUBLISHED)
+                .orElseThrow(() -> new NotFoundException(String.format("Мероприятие с eventId: %d не было найдено", eventId)));
     }
 
     private Event getEventByIdAdmin(long eventId) {
@@ -259,10 +304,10 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
                 .orElseThrow(() -> new NotFoundException(String.format("Категория с catId: %d не была найден", catId)));
     }
 
-    private List<Event> findAllByQueryDSL(EventParamFindAll param) {
+    private List<Event> findAllByQueryDSLAdmin(EventParamFindAllAdmin param) {
         QEvent event = QEvent.event;
 
-        BooleanExpression predicate = buildBooleanExpression(param, event);
+        BooleanExpression predicate = buildBooleanExpressionAdmin(param, event);
 
         return queryFactory
                 .selectFrom(event)
@@ -274,7 +319,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
                 .fetch();
     }
 
-    private BooleanExpression buildBooleanExpression(EventParamFindAll param, QEvent event) {
+    private BooleanExpression buildBooleanExpressionAdmin(EventParamFindAllAdmin param, QEvent event) {
         BooleanExpression predicate = Expressions.TRUE;
 
         if (param.getUsers() != null && !param.getUsers().isEmpty()) {
@@ -295,6 +340,72 @@ public class EventServiceDefault implements EventServicePrivate, EventServiceAdm
 
         if (param.getRangeEnd() != null) {
             predicate = predicate.and(event.eventDate.loe(param.getRangeEnd()));
+        }
+
+        return predicate;
+    }
+
+    private List<Event> findAllByQueryDSLPublic(EventParamFindAllPublic param) {
+        QEvent event = QEvent.event;
+        int from = param.getFrom();
+        int size = param.getSize();
+        Sort sort = param.getSort();
+
+        BooleanExpression predicate = buildBooleanExpressionPublic(param, event);
+        OrderSpecifier<?> specifier = switch (sort) {
+            case EVENT_DATE -> event.eventDate.desc();
+            case VIEWS -> event.views.desc();
+        };
+
+        return queryFactory
+                .selectFrom(event)
+                .join(event.initiator).fetchJoin()
+                .join(event.category).fetchJoin()
+                .where(predicate)
+                .orderBy(specifier)
+                .offset(from)
+                .limit(size)
+                .fetch();
+    }
+
+    private BooleanExpression buildBooleanExpressionPublic(EventParamFindAllPublic param, QEvent event) {
+        String text = param.getText();
+        List<Category> categories = param.getCategories();
+        Boolean paid = param.getPaid();
+        LocalDateTime rangeStart = param.getRangeStart();
+        LocalDateTime rangeEnd = param.getRangeEnd();
+        Boolean onlyAvailable = param.getOnlyAvailable();
+
+        BooleanExpression predicate = Expressions.TRUE;
+
+        if (text != null && !text.isBlank()) {
+            BooleanExpression annotation = event.annotation.contains(text);
+            BooleanExpression description = event.description.contains(text);
+            predicate = predicate.and(annotation.or(description));
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            predicate = predicate.and(event.category.id.in(categories.stream()
+                    .map(Category::getId)
+                    .collect(Collectors.toList())));
+        }
+
+        if (paid != null) {
+            predicate = predicate.and(event.paid.eq(paid));
+        }
+
+        if (rangeStart != null) {
+            predicate = predicate.and(event.eventDate.goe(rangeStart));
+        } else {
+            predicate = predicate.and(event.eventDate.goe(LocalDateTime.now()));
+        }
+
+        if (rangeEnd != null) {
+            predicate = predicate.and(event.eventDate.loe(rangeEnd));
+        }
+
+        if (onlyAvailable != null) {
+            predicate = predicate.and(event.state.eq(State.PUBLISHED));
         }
 
         return predicate;

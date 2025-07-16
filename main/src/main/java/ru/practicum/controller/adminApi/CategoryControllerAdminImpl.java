@@ -30,7 +30,7 @@ public class CategoryControllerAdminImpl implements CategoryControllerAdmin {
     @PatchMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto update(@RequestBody CategoryChange categoryRequest,
-                              @PathVariable(name = "catId") Long catId) {
+                              @PathVariable Long catId) {
         log.info("Запрос от клиента на изменение существующей категории с catId: {}, request: {}", catId, categoryRequest);
         return categoryService.update(categoryRequest, catId);
     }
@@ -38,7 +38,7 @@ public class CategoryControllerAdminImpl implements CategoryControllerAdmin {
     @Override
     @DeleteMapping("/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable(name = "catId") Long catId) {
+    public void delete(@PathVariable Long catId) {
         log.info("Запрос от клиента на удаление категории с catId: {}", catId);
         categoryService.delete(catId);
     }

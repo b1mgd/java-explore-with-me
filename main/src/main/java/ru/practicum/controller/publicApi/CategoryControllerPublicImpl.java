@@ -22,8 +22,8 @@ public class CategoryControllerPublicImpl implements CategoryControllerPublic {
     @Override
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CategoryDto> findAllCategories(@RequestParam(name = "from") Integer from,
-                                               @RequestParam(name = "size") Integer size) {
+    public List<CategoryDto> findAllCategories(@RequestParam Integer from,
+                                               @RequestParam Integer size) {
         log.info("Получен запрос от клиента о получении списка категорий с параметрами. from: {}, size: {}", from, size);
         return categoryService.findAllCategories(from, size);
     }
@@ -31,7 +31,7 @@ public class CategoryControllerPublicImpl implements CategoryControllerPublic {
     @Override
     @GetMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
-    public CategoryDto findById(@PathVariable(name = "catId") Long catId) {
+    public CategoryDto findById(@PathVariable Long catId) {
         log.info("Получен запрос от клиента о получении категории с catId: {}", catId);
         return categoryService.findById(catId);
     }

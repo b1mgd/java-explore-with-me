@@ -19,10 +19,11 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class StatClientImpl implements StatClient {
+
     private final RestClient restClient;
 
     @Override
-    public HitDto save(HitPost hitPost) {
+    public HitDto hit(HitPost hitPost) {
         log.info("Клиент направляет запрос о сохранении посещения: {}", hitPost);
 
         HitDto hitDto = restClient.post()

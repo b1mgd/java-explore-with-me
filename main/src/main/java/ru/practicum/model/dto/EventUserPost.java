@@ -1,6 +1,5 @@
 package ru.practicum.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,7 +33,6 @@ public class EventUserPost {
     private String description;
 
     @NotNull(message = "Дата события должна быть указана")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
     @NotNull(message = "Местоположение должно быть указано")

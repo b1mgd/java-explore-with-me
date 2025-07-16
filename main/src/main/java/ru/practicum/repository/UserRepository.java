@@ -11,19 +11,23 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    @Query(value = "SELECT u FROM User u " +
-            "WHERE u.id IN :ids " +
-            "ORDER BY u.id " +
-            "LIMIT :size " +
-            "OFFSET :from ")
+    @Query(value = """
+            SELECT u FROM User u
+            WHERE u.id IN :ids
+            ORDER BY u.id
+            LIMIT :size
+            OFFSET :from
+            """)
     List<User> findAllUsers(@Param("ids") List<Long> ids,
                             @Param("from") long from,
                             @Param("size") long size);
 
-    @Query("SELECT u FROM User u " +
-            "ORDER BY u.id " +
-            "LIMIT :size " +
-            "OFFSET :from ")
+    @Query(value = """
+            SELECT u FROM User u
+            ORDER BY u.id
+            LIMIT :size
+            OFFSET :from
+            """)
     List<User> findAllUsers(@Param("from") int from,
                             @Param("size") int size);
 }
