@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "participation_requests")
+@Builder
 @Getter
 @Setter
 @EqualsAndHashCode(exclude = {"event", "requester"})

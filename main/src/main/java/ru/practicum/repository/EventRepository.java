@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.model.entity.Event;
 import ru.practicum.model.entity.utility.State;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,19 +29,21 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
                               @Param("size") int size);
 
     @EntityGraph(attributePaths = {"initiator", "category"})
-    @Query(value = """
-            SELECT e FROM Event e
-            WHERE e.initiator.id = :userId AND e.id = :eventId
-            """)
-    Optional<Event> findSavedEventById(@Param("userId") long userId,
-                                       @Param("eventId") long eventId);
+    Optional<Event> findByInitiator_IdAndId(@Param("userId") long userId,
+                                            @Param("eventId") long eventId);
 
     @Query(value = """
             SELECT e.state FROM Event e
             WHERE e.id = :eventId
             """)
-    State findStateById(@Param("eventId") long eventId);
+    State findStateById(@Param("eventId") Long eventId);
 
     @EntityGraph(attributePaths = {"initiator", "category"})
     Optional<Event> findByIdAndStateEquals(long eventId, State state);
+
+    @EntityGraph(attributePaths = {"initiator", "category"})
+    Optional<Event> findById(Long eventId);
+
+    @EntityGraph(attributePaths = {"initiator", "category"})
+    List<Event> findAllByIdIn(List<Long> eventIds);
 }

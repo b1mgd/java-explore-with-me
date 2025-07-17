@@ -11,16 +11,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.ConflictException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.EventMapper;
+import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.dto.*;
 import ru.practicum.model.dto.params.*;
-import ru.practicum.model.entity.Category;
-import ru.practicum.model.entity.Event;
-import ru.practicum.model.entity.QEvent;
-import ru.practicum.model.entity.User;
+import ru.practicum.model.entity.*;
 import ru.practicum.model.entity.utility.Sort;
 import ru.practicum.model.entity.utility.State;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.ParticipationRequestRepository;
 import ru.practicum.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -36,8 +35,10 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final ParticipationRequestRepository requestRepository;
 
     private final EventMapper eventMapper;
+    private final ParticipationRequestMapper requestMapper;
 
     private final JPAQueryFactory queryFactory;
 
@@ -123,17 +124,21 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
 
     /**
      * [PRIVATE] Получение всех заявок по событию пользователя
-     * TO-DO: ParticipationRequest Business logic
      */
     @Override
     @Transactional(readOnly = true)
     public List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(long userId, long eventId) {
-        return List.of();
+        List<ParticipationRequest> requests = requestRepository.findAllByEvent_Initiator_idAndEvent_Id(userId, eventId);
+
+        log.info("Найдены запросы на участие в событии: {}", requests);
+
+        return requests.stream()
+                .map(requestMapper::mapToRequestDto)
+                .collect(Collectors.toList());
     }
 
     /**
      * [PRIVATE] Модерация всех направленных заявок на участие в событии пользователя
-     * TO-DO: ParticipationRequest Business logic
      */
     /*
     1) лимит заявок = 0 или премодерация заявок = false -> подтверждение заявок не требуется
@@ -143,7 +148,39 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
      */
     @Override
     public EventStatusUpdateResult reviewAllEventParticipationRequests(EventParamParticipationStatus param) {
-        return null;
+        long userId = param.getUserId();
+        long eventId = param.getEventId();
+        EventStatusUpdateRequest updateRequest = param.getEventStatusUpdateRequest();
+
+        List<Long> requestIds = updateRequest.getRequestIds();
+        List<ParticipationRequest> requests = requestRepository.findAllByIdIn(requestIds);
+
+        if (requests.size() < requestIds.size()) {
+            throw new NotFoundException("Одна или несколько заявок не были найдены");
+        }
+
+
+        
+
+
+//
+//        User initiator = getUserById(userId);
+//        Event event = getEventByIdAndUserId(userId, eventId);
+//
+//        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
+//            // подтверждение не требуется
+//        }
+//
+//        if (event.getParticipantLimit() <= event.getConfirmedRequests()) {
+//            throw new ConflictException("Достигнут лимит участников");
+//        }
+//
+//        while (...) {
+//         // -> отменяем всех остальных
+//        }
+
+
+            return null;
     }
 
     /**
@@ -290,7 +327,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
     }
 
     private Event getEventByIdAndUserId(long userId, long eventId) {
-        return eventRepository.findSavedEventById(userId, eventId)
+        return eventRepository.findByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new NotFoundException(String.format("Мероприятие с eventId: %d не было найдено", eventId)));
     }
 
