@@ -1,5 +1,6 @@
 package ru.practicum.controller.publicApi;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,6 @@ import ru.practicum.model.dto.params.EventParamFindAllPublic;
 import ru.practicum.model.entity.Category;
 import ru.practicum.model.entity.utility.Sort;
 import ru.practicum.service.EventServicePublic;
-import ru.practicum.service.StatClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,7 +24,6 @@ import java.util.List;
 public class EventControllerPublicImpl implements EventControllerPublic {
 
     private final EventServicePublic eventService;
-    private final StatClient statClient;
 
     @Override
     @GetMapping
@@ -38,14 +37,14 @@ public class EventControllerPublicImpl implements EventControllerPublic {
             @RequestParam(required = false) Boolean onlyAvailable,
             @RequestParam(defaultValue = "EVENT_DATE") Sort sort,
             @RequestParam(defaultValue = "0") Integer from,
-            @RequestParam(defaultValue = "10") Integer size
+            @RequestParam(defaultValue = "10") Integer size,
+            HttpServletRequest request
     ) {
-
         log.info("Публичный запрос от клиента на получение списка событий, соответствующих параметрам. " +
                 "text: {}, categories: {}, paid: {}, rangeStart: {}, rangeEnd: {}, onlyAvailable: {}, " +
                 "sort: {}, from: {}, size: {}", text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
 
-        List<EventShortDto> events = eventService.findAllEvents(
+        return eventService.findAllEvents(
                 EventParamFindAllPublic.builder()
                         .text(text)
                         .categories(categories)
@@ -56,31 +55,17 @@ public class EventControllerPublicImpl implements EventControllerPublic {
                         .sort(sort)
                         .from(from)
                         .size(size)
-                        .build()
+                        .build(),
+                request
         );
-
-//        statClient.hit(new HitPost(
-//                app,
-//                uri,
-//                ip
-//        ));
-
-        return events;
     }
 
     @Override
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
-    public EventDto findByEventId(@PathVariable Long eventId) {
+    public EventDto findByEventId(@PathVariable Long eventId, HttpServletRequest request) {
         log.info("Публичный запрос от клиента на получение информации об опубликованном событии с eventId: {}", eventId);
-        EventDto eventDto = eventService.findByEventId(eventId);
 
-        //        statClient.hit(new HitPost(
-//                app,
-//                uri,
-//                ip
-//        ));
-
-        return eventDto;
+        return eventService.findByEventId(eventId, request);
     }
 }

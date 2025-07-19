@@ -30,7 +30,6 @@ public class StatsRepositoryImpl implements StatsRepository {
         String sql = """
                 INSERT INTO hits (app, uri, ip, timestamp)
                 VALUES (?, ?, ?, ?)
-                RETURNING id
                 """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();

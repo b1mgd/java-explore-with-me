@@ -2,6 +2,9 @@ package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.ConflictException;
@@ -11,9 +14,9 @@ import ru.practicum.model.dto.CategoryChange;
 import ru.practicum.model.dto.CategoryDto;
 import ru.practicum.model.entity.Category;
 import ru.practicum.repository.CategoryRepository;
+import ru.practicum.repository.EventRepository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +26,8 @@ import java.util.stream.Collectors;
 public class CategoryServiceDefault implements CategoryServiceAdmin, CategoryServicePublic {
 
     private final CategoryRepository categoryRepository;
+    private final EventRepository eventRepository;
+
     private final CategoryMapper categoryMapper;
 
     /**
@@ -30,7 +35,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
      */
     @Override
     public CategoryDto save(CategoryChange categoryRequest) {
-        checkNameUnique(categoryRequest.getName());
+        nameUnique(categoryRequest.getName());
         Category category = categoryMapper.mapToCategory(categoryRequest);
 
         Category savedCategory = categoryRepository.save(category);
@@ -44,10 +49,14 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
      */
     @Override
     public CategoryDto update(CategoryChange categoryRequest, long catId) {
-        checkCategoryExists(catId);
-        checkNameUnique(categoryRequest.getName());
+        Category category = getCategoryById(catId);
 
-        Category category = categoryMapper.mapToCategory(catId, categoryRequest);
+        if (categoryRequest.getName() != null && !categoryRequest.getName().equals(category.getName())) {
+            nameUnique(categoryRequest.getName());
+        }
+
+        categoryMapper.mapToCategoryFromCategoryPatch(category, categoryRequest);
+
         Category savedCategory = categoryRepository.save(category);
         log.info("Категория успешно обновлена: {}", savedCategory);
 
@@ -56,11 +65,11 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
 
     /**
      * [ADMIN] Удаление существующей категории
-     * TO-DO: существуют события, связанные с категорией -> 409
      */
     @Override
     public void delete(long catId) {
-        checkCategoryExists(catId);
+        categoryExists(catId);
+        linkedWithEvents(catId);
         categoryRepository.deleteById(catId);
         log.info("Категория с catId: {} успешно удалена", catId);
     }
@@ -72,7 +81,8 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
     @Override
     @Transactional(readOnly = true)
     public List<CategoryDto> findAllCategories(int from, int size) {
-        List<Category> categories = categoryRepository.findAllCategories(from, size);
+        Pageable pageable = PageRequest.of(from, size, Sort.by("id"));
+        List<Category> categories = categoryRepository.findAll(pageable).getContent();
         log.info("Получены все категории, удовлетворяющие запросу: {}", categories);
 
         return categories.stream()
@@ -97,7 +107,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
                 .orElseThrow(() -> new NotFoundException(String.format("Категория с catId: %d не найдена", catId)));
     }
 
-    private void checkCategoryExists(long catId) {
+    private void categoryExists(long catId) {
         boolean exists = categoryRepository.existsById(catId);
 
         if (!exists) {
@@ -105,11 +115,19 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
         }
     }
 
-    private void checkNameUnique(String name) {
-        Optional<Category> category = categoryRepository.findByName(name);
+    private void nameUnique(String name) {
+        boolean exists = categoryRepository.existsByName(name);
 
-        if (category.isPresent()) {
+        if (exists) {
             throw new ConflictException("Попытка добавить уже существующее название категории: " + name);
+        }
+    }
+
+    private void linkedWithEvents(long catId) {
+        boolean exists = eventRepository.existsByCategory_id(catId);
+
+        if (exists) {
+            throw new ConflictException(String.format("Удаляемая категория с catId: %d связана с существующими событиями", catId));
         }
     }
 }

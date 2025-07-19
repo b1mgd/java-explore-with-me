@@ -19,5 +19,5 @@ public interface EventServicePrivate {
 
     List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(long userId, long eventId);
 
-    EventStatusUpdateResult reviewAllEventParticipationRequests(EventParamParticipationStatus param);
+    EventStatusUpdateDto reviewAllEventParticipationRequests(EventParamParticipationStatus param);
 }

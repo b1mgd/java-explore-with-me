@@ -18,6 +18,7 @@ public interface EventMapper {
     Event mapToEvent(User initiator, Category category, EventUserPost eventUserPost);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "state", source = "state")
     void updateEventFromUserPatch(@MappingTarget Event event,
@@ -27,6 +28,7 @@ public interface EventMapper {
 
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", source = "category")
     @Mapping(target = "state", source = "state")
     void updateEventFromAdminPatch(@MappingTarget Event event,

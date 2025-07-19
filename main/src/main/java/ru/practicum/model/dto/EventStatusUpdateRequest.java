@@ -1,6 +1,6 @@
 package ru.practicum.model.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,6 +19,6 @@ public class EventStatusUpdateRequest {
 
     private List<Long> requestIds = new ArrayList<>();
 
-    @NotBlank(message = "Статус запроса на участие должен быть указан")
+    @NotNull(message = "Статус запроса на участие должен быть указан")
     private Status status;
 }

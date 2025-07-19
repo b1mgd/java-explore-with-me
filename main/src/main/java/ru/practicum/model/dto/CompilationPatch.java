@@ -15,7 +15,7 @@ public class CompilationPatch {
 
     private Boolean pinned;
 
-    @Size(min = 2, max = 120, message = "Некорректный формат названия подборки")
+    @Size(min = 1, max = 50, message = "Некорректный формат названия подборки")
     private String title;
 
     private List<Long> events = new ArrayList<>();

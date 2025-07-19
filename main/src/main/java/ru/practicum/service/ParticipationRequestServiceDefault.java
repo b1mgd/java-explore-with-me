@@ -49,7 +49,7 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
         validateCreateRequest(event, userId);
         Status status;
 
-        if (!event.isRequestModeration()) {
+        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
             status = Status.CONFIRMED;
         } else {
             status = Status.PENDING;
@@ -64,6 +64,12 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
                 .build();
 
         ParticipationRequest savedRequest = requestRepository.save(request);
+
+        if (status == Status.CONFIRMED) {
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+            eventRepository.save(event);
+        }
+
         log.info("Запрос на участие в событии сохранен: {}", savedRequest);
 
         return requestMapper.mapToRequestDto(savedRequest);
@@ -105,7 +111,10 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
             throw new ConflictException("Принять участие можно только в опубликованном событии");
         }
 
-        if (event.getParticipantLimit() <= event.getConfirmedRequests()) {
+        System.out.println("event.getParticipantLimit() = " + event.getParticipantLimit());
+        System.out.println("event.getConfirmedRequests() = " + event.getConfirmedRequests());
+
+        if (event.getParticipantLimit() != 0 && (event.getParticipantLimit() <= event.getConfirmedRequests())) {
             throw new ConflictException("Достигнуто максимальное количество участников");
         }
     }

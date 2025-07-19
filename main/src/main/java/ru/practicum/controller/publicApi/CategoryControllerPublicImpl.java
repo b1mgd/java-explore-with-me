@@ -22,8 +22,8 @@ public class CategoryControllerPublicImpl implements CategoryControllerPublic {
     @Override
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<CategoryDto> findAllCategories(@RequestParam Integer from,
-                                               @RequestParam Integer size) {
+    public List<CategoryDto> findAllCategories(@RequestParam(defaultValue = "0") Integer from,
+                                               @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен запрос от клиента о получении списка категорий с параметрами. from: {}, size: {}", from, size);
         return categoryService.findAllCategories(from, size);
     }

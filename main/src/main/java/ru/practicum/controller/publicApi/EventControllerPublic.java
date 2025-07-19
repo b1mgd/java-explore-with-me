@@ -1,5 +1,6 @@
 package ru.practicum.controller.publicApi;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import ru.practicum.model.dto.EventDto;
@@ -21,8 +22,9 @@ public interface EventControllerPublic {
             Boolean onlyAvailable,
             Sort sort,
             @PositiveOrZero Integer from,
-            @Positive Integer size
+            @Positive Integer size,
+            HttpServletRequest request
     );
 
-    EventDto findByEventId(@Positive Long eventId);
+    EventDto findByEventId(@Positive Long eventId, HttpServletRequest request);
 }

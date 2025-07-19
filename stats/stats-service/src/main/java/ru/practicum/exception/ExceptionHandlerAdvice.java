@@ -28,18 +28,6 @@ public class ExceptionHandlerAdvice {
         private LocalDateTime timestamp;
     }
 
-    @ExceptionHandler(BadRequestException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleBadRequestException(BadRequestException e) {
-        log.warn("Запрос составлен некорректно: {}", e.getMessage());
-        return ApiError.builder()
-                .message(e.getMessage())
-                .reason("Запрос составлен некорректно")
-                .status(HttpStatus.BAD_REQUEST.toString())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
@@ -76,37 +64,13 @@ public class ExceptionHandlerAdvice {
                 .build();
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiError handleNotFoundException(NotFoundException e) {
-        log.warn("Результаты по запросу не были найдены: {}", e.getMessage());
-        return ApiError.builder()
-                .message(e.getMessage())
-                .reason("Результаты по запросу не были найдены")
-                .status(HttpStatus.NOT_FOUND.toString())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
-    @ExceptionHandler(ConflictException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handleConflictException(ConflictException e) {
-        log.warn("Нарушение целостности данных: {}", e.getMessage());
-        return ApiError.builder()
-                .message(e.getMessage())
-                .reason("Нарушение целостности данных")
-                .status(HttpStatus.CONFLICT.toString())
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiError handleException(Exception e) {
         log.warn("Внутренняя ошибка сервера: {}", e.getMessage());
         return ApiError.builder()
                 .message(e.getMessage())
-                .reason("Внутренняя ошибка главного (main) сервера")
+                .reason("Внутренняя ошибка сервера статистики")
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())
                 .timestamp(LocalDateTime.now())
                 .build();

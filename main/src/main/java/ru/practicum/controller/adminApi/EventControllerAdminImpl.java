@@ -35,7 +35,7 @@ public class EventControllerAdminImpl implements EventControllerAdmin {
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size
     ) {
-        log.info("Получен запрос от клиента на поиск событий, удовлетворяющим параметрам поиска. " +
+        log.info("[ADMIN] Получен запрос от клиента с правами администратора на поиск событий, удовлетворяющим параметрам поиска. " +
                         "users: {}, states: {}, categories: {}, rangeStart: {}, rangeEnd: {}, from: {}, size: {}",
                 users, states, categories, rangeStart, rangeEnd, from, size);
 
@@ -57,7 +57,7 @@ public class EventControllerAdminImpl implements EventControllerAdmin {
     @ResponseStatus(HttpStatus.OK)
     public EventDto updateEventAdmin(@PathVariable Long eventId,
                                      @RequestBody EventAdminPatch eventPatch) {
-        log.info("Получен запрос от клиента на модерацию заявки с правами администратора. " +
+        log.info("[ADMIN] Получен запрос от клиента на модерацию заявки с правами администратора. " +
                 "eventId: {}, eventPatch: {}", eventId, eventPatch);
         return eventService.updateEventAdmin(eventId, eventPatch);
     }

@@ -30,7 +30,7 @@ public class StatsServiceImpl implements StatsService {
     public HitDto save(HitPost hitPost) {
         Hit hit = hitMapper.mapToHit(hitPost);
         Hit savedHit = statsRepository.save(hit);
-        log.info("Посещение ресурса сохранено {}", hit);
+        log.info("StatService: посещение ресурса сохранено - {}", hit);
 
         return hitMapper.mapToHitDto(savedHit);
     }
@@ -39,7 +39,7 @@ public class StatsServiceImpl implements StatsService {
     @Transactional(readOnly = true)
     public List<StatsDto> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         List<Stats> stats = statsRepository.findAllStats(start, end, uris, unique);
-        log.info("Получена информация по запросу статистики: {}", stats);
+        log.info("StatService: получена информация по запросу статистики - {}", stats);
 
         return stats.stream()
                 .map(statsMapper::mapToStatsDto)

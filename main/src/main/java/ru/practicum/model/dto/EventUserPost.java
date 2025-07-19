@@ -18,7 +18,7 @@ public class EventUserPost {
 
     private boolean paid;
 
-    private boolean requestModeration;
+    private boolean requestModeration = true;
 
     @NotBlank(message = "Название мероприятия должно быть заполнено")
     @Size(min = 3, max = 120, message = "Некорректный формат названия мероприятия")
