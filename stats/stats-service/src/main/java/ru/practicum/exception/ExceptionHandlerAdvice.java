@@ -64,6 +64,18 @@ public class ExceptionHandlerAdvice {
                 .build();
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleBadRequestException(BadRequestException e) {
+        log.warn("Запрос составлен некорректно: {}", e.getMessage());
+        return ApiError.builder()
+                .message(e.getMessage())
+                .reason("Запрос составлен некорректно")
+                .status(HttpStatus.BAD_REQUEST.toString())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiError handleException(Exception e) {

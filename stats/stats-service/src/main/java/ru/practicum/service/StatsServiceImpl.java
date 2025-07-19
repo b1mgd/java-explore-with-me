@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.exception.BadRequestException;
 import ru.practicum.mapper.HitMapper;
 import ru.practicum.mapper.StatsMapper;
 import ru.practicum.model.Hit;
@@ -38,6 +39,10 @@ public class StatsServiceImpl implements StatsService {
     @Override
     @Transactional(readOnly = true)
     public List<StatsDto> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        if (start.isAfter(end)) {
+            throw new BadRequestException(String.format("Время начала start: %s не может быть после end: %s", start, end));
+        }
+
         List<Stats> stats = statsRepository.findAllStats(start, end, uris, unique);
         log.info("StatService: получена информация по запросу статистики - {}", stats);
 

@@ -292,10 +292,24 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
      * [PUBLIC] Получение списка событий, удовлетворяющего параметрам
      */
     @Override
-//    @Transactional(readOnly = true)
     public List<EventShortDto> findAllEvents(EventParamFindAllPublic param, HttpServletRequest request) {
+        if (request.getRequestURI().equals("/events")) {
+            statClient.hit(
+                    HitPost.builder()
+                            .app(APP)
+                            .uri(request.getRequestURI())
+                            .ip(request.getRemoteAddr())
+                            .build()
+            );
+        }
+
         collectionContainsNull(param.getCategories());
+
         List<Event> events = findAllByQueryDSLPublic(param);
+
+        if (events.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         String baseUrl = request.getRequestURI();
         String ip = request.getRemoteAddr();
@@ -327,8 +341,6 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
                 uris,
                 true
         );
-
-        System.out.println("stats = " + stats);
 
         for (StatsDto stat : stats) {
             int slashIndex = stat.getUri().lastIndexOf('/');
@@ -384,7 +396,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
 
 
     private void collectionContainsNull(List<Category> categories) {
-        if (categories.stream().anyMatch(Objects::isNull)) {
+        if (categories != null && categories.stream().anyMatch(Objects::isNull)) {
             throw new BadRequestException("Поиск по категориям не принимает null");
         }
     }
