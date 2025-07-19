@@ -23,7 +23,7 @@ public class ParticipationRequestPrivateImpl implements ParticipationRequestPriv
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> findAllUserRequests(@PathVariable Long userId) {
-        log.info("[Public] Запрос от клиента с userId: {} на получение списка направленных заявок на участие в событиях", userId);
+        log.info("[PRIVATE] Получение списка запросов на участие в созданном событии. userId: {} ", userId);
         return requestService.findAllUserRequests(userId);
     }
 
@@ -32,7 +32,7 @@ public class ParticipationRequestPrivateImpl implements ParticipationRequestPriv
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto createRequest(@PathVariable Long userId,
                                                  @RequestParam Long eventId) {
-        log.info("[Public] Запрос от клиента с userId: {} на формировании заявки на участие к событию с eventId: {}", userId, eventId);
+        log.info("[PRIVATE] Создание заявки на участие в событии. userId: {}, eventId: {}", userId, eventId);
         return requestService.createRequest(userId, eventId);
     }
 
@@ -41,7 +41,7 @@ public class ParticipationRequestPrivateImpl implements ParticipationRequestPriv
     @ResponseStatus(HttpStatus.OK)
     public ParticipationRequestDto cancelRequest(@PathVariable Long userId,
                                                  @PathVariable Long requestId) {
-        log.info("[Public] Запрос от клиента с userId: {} на отмену заявки на участие с requestId: {}", userId, requestId);
+        log.info("[PRIVATE] Отмена заявки на участие в событии. userId: {}, requestId: {}", userId, requestId);
         return requestService.cancelRequest(userId, requestId);
     }
 }

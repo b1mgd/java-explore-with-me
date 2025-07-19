@@ -2,6 +2,7 @@ package ru.practicum.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.model.entity.utility.Location;
 import ru.practicum.model.entity.utility.State;

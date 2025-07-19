@@ -40,9 +40,9 @@ public class EventControllerPublicImpl implements EventControllerPublic {
             @RequestParam(defaultValue = "10") Integer size,
             HttpServletRequest request
     ) {
-        log.info("Публичный запрос от клиента на получение списка событий, соответствующих параметрам. " +
-                "text: {}, categories: {}, paid: {}, rangeStart: {}, rangeEnd: {}, onlyAvailable: {}, " +
-                "sort: {}, from: {}, size: {}", text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+        log.info("[PUBLIC] Получение списка событий по параметрам. text: {}, categories: {}, paid: {}, rangeStart: {}, " +
+                        "rangeEnd: {}, onlyAvailable: {}, sort: {}, from: {}, size: {}",
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
 
         return eventService.findAllEvents(
                 EventParamFindAllPublic.builder()
@@ -64,8 +64,7 @@ public class EventControllerPublicImpl implements EventControllerPublic {
     @GetMapping("/{eventId}")
     @ResponseStatus(HttpStatus.OK)
     public EventDto findByEventId(@PathVariable Long eventId, HttpServletRequest request) {
-        log.info("Публичный запрос от клиента на получение информации об опубликованном событии с eventId: {}", eventId);
-
+        log.info("[PUBLIC] Получение события. eventId: {}", eventId);
         return eventService.findByEventId(eventId, request);
     }
 }

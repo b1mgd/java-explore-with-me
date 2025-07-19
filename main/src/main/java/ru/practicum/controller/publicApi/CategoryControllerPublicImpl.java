@@ -24,7 +24,7 @@ public class CategoryControllerPublicImpl implements CategoryControllerPublic {
     @ResponseStatus(HttpStatus.OK)
     public List<CategoryDto> findAllCategories(@RequestParam(defaultValue = "0") Integer from,
                                                @RequestParam(defaultValue = "10") Integer size) {
-        log.info("Получен запрос от клиента о получении списка категорий с параметрами. from: {}, size: {}", from, size);
+        log.info("[PUBLIC] Получение списка категорий. from: {}, size: {}", from, size);
         return categoryService.findAllCategories(from, size);
     }
 
@@ -32,7 +32,7 @@ public class CategoryControllerPublicImpl implements CategoryControllerPublic {
     @GetMapping("/{catId}")
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto findById(@PathVariable Long catId) {
-        log.info("Получен запрос от клиента о получении категории с catId: {}", catId);
+        log.info("[PUBLIC] Получение категории. catId: {}", catId);
         return categoryService.findById(catId);
     }
 }

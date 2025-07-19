@@ -28,8 +28,7 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     public List<EventShortDto> findAllUserEvents(@PathVariable Long userId,
                                                  @RequestParam(defaultValue = "0") Integer from,
                                                  @RequestParam(defaultValue = "10") Integer size) {
-        log.info("Запрос от клиента на получение событий, добавленных текущим пользователем. " +
-                "userId: {}, from: {}, size: {}", userId, from, size);
+        log.info("[PRIVATE] Получение списка созданных событий. userId: {}, from: {}, size: {}", userId, from, size);
         return eventService.findAllUserEvents(
                 EventParamFindAllUserEvents.builder()
                         .userId(userId)
@@ -44,7 +43,7 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @ResponseStatus(HttpStatus.CREATED)
     public EventDto saveEvent(@PathVariable Long userId,
                               @RequestBody EventUserPost eventPost) {
-        log.info("[Public] Запрос от клиента на добавление нового события. userId: {}, eventPost: {}", userId, eventPost);
+        log.info("[PRIVATE] Добавление нового события. userId: {}, eventPost: {}", userId, eventPost);
         return eventService.saveEvent(userId, eventPost);
     }
 
@@ -53,7 +52,7 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @ResponseStatus(HttpStatus.OK)
     public EventDto findESavedEventById(@PathVariable Long userId,
                                         @PathVariable Long eventId) {
-        log.info("[Public] Запрос от клиента с userId: {} на получение информации о сохраненном им событии c eventId: {}", userId, eventId);
+        log.info("[PRIVATE] Получение созданного события. userId: {}, eventId: {}", userId, eventId);
         return eventService.findSavedEventById(userId, eventId);
     }
 
@@ -63,8 +62,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     public EventDto updateSavedEvent(@PathVariable Long userId,
                                      @PathVariable Long eventId,
                                      @RequestBody EventUserPatch eventPatch) {
-        log.info("[Public] Запрос от клиента на изменение события с eventId: {}, " +
-                "добавленного текущим пользователем с userId: {}. eventPatch: {}", eventId, userId, eventPatch);
+        log.info("[PRIVATE] Изменение созданного события. eventId: {}, userId: {}, eventPatch: {}",
+                eventId, userId, eventPatch);
         return eventService.updateSavedEvent(
                 EventParamUserPatch.builder()
                         .userId(userId)
@@ -79,8 +78,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     @ResponseStatus(HttpStatus.OK)
     public List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(@PathVariable Long userId,
                                                                                 @PathVariable Long eventId) {
-        log.info("[Public] Запрос от клиента на получение информации о запросах на участие в событии, добавленном текущим пользователем. " +
-                "userId: {}, eventId: {}", userId, eventId);
+        log.info("[PRIVATE] Получение списка запросов на участие в созданном событии. userId: {}, eventId: {}",
+                userId, eventId);
         return eventService.findAllOtherUsersParticipationRequests(userId, eventId);
     }
 
@@ -90,8 +89,8 @@ public class EventControllerPrivateImpl implements EventControllerPrivate {
     public EventStatusUpdateDto reviewAllEventParticipationRequests(@PathVariable Long userId,
                                                                     @PathVariable Long eventId,
                                                                     @RequestBody EventStatusUpdateRequest eventStatusUpdateRequest) {
-        log.info("[Public] Запрос от клиента на изменение статуса заявок на участие в событии, добавленных текущим пользователем. " +
-                "userId: {}, eventId: {}, eventStatusUpdateRequest: {}", userId, eventId, eventStatusUpdateRequest);
+        log.info("[PRIVATE] Изменение статуса запросов на участие в созданном событии. userId: {}, eventId: {}, " +
+                "eventStatusUpdateRequest: {}", userId, eventId, eventStatusUpdateRequest);
         return eventService.reviewAllEventParticipationRequests(
                 EventParamParticipationStatus.builder()
                         .userId(userId)

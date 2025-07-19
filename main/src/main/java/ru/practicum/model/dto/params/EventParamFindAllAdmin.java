@@ -9,8 +9,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @Builder
+@AllArgsConstructor
 public class EventParamFindAllAdmin {
     private List<Long> users;
     private List<State> states;

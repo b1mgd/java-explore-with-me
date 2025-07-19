@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 @Slf4j
 public class CategoryServiceDefault implements CategoryServiceAdmin, CategoryServicePublic {
 
@@ -39,7 +39,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
         Category category = categoryMapper.mapToCategory(categoryRequest);
 
         Category savedCategory = categoryRepository.save(category);
-        log.info("Новая категория сохранена: {}", savedCategory);
+        log.info("Категория сохранена: {}", savedCategory);
 
         return categoryMapper.mapToCategoryDto(savedCategory);
     }
@@ -58,7 +58,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
         categoryMapper.mapToCategoryFromCategoryPatch(category, categoryRequest);
 
         Category savedCategory = categoryRepository.save(category);
-        log.info("Категория успешно обновлена: {}", savedCategory);
+        log.info("Категория обновлена: {}", savedCategory);
 
         return categoryMapper.mapToCategoryDto(savedCategory);
     }
@@ -71,7 +71,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
         categoryExists(catId);
         linkedWithEvents(catId);
         categoryRepository.deleteById(catId);
-        log.info("Категория с catId: {} успешно удалена", catId);
+        log.info("Категория с catId: {} удалена", catId);
     }
 
 
@@ -81,9 +81,9 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
     @Override
     @Transactional(readOnly = true)
     public List<CategoryDto> findAllCategories(int from, int size) {
-        Pageable pageable = PageRequest.of(from, size, Sort.by("id"));
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("id"));
         List<Category> categories = categoryRepository.findAll(pageable).getContent();
-        log.info("Получены все категории, удовлетворяющие запросу: {}", categories);
+        log.info("Получены категории: {}", categories);
 
         return categories.stream()
                 .map(categoryMapper::mapToCategoryDto)
@@ -119,7 +119,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
         boolean exists = categoryRepository.existsByName(name);
 
         if (exists) {
-            throw new ConflictException("Попытка добавить уже существующее название категории: " + name);
+            throw new ConflictException("Название категории должно быть уникально: " + name);
         }
     }
 
@@ -127,7 +127,7 @@ public class CategoryServiceDefault implements CategoryServiceAdmin, CategorySer
         boolean exists = eventRepository.existsByCategory_id(catId);
 
         if (exists) {
-            throw new ConflictException(String.format("Удаляемая категория с catId: %d связана с существующими событиями", catId));
+            throw new ConflictException(String.format("Категория с catId: %d связана с событиями", catId));
         }
     }
 }

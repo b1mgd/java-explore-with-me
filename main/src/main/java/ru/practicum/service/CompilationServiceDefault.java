@@ -45,7 +45,7 @@ public class CompilationServiceDefault implements CompilationServicePublic, Comp
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("id"));
 
         List<Compilation> compilations = compilationRepository.findAllByPinned(pinned, pageable);
-        log.info("По запросу найдены подборки: {}", compilations);
+        log.info("Найдены подборки: {}", compilations);
 
         return compilations.stream()
                 .map(compilationMapper::mapToCompilationDto)
@@ -59,7 +59,7 @@ public class CompilationServiceDefault implements CompilationServicePublic, Comp
     @Transactional(readOnly = true)
     public CompilationDto findById(long compId) {
         Compilation compilation = getCompilationById(compId);
-        log.info("Получена подборка: {}", compilation);
+        log.info("Найдена подборка: {}", compilation);
 
         return compilationMapper.mapToCompilationDto(compilation);
     }
@@ -73,7 +73,7 @@ public class CompilationServiceDefault implements CompilationServicePublic, Comp
 
         Compilation compilation = compilationMapper.mapToCompilation(compilationPost, events);
         Compilation savedCompilation = compilationRepository.save(compilation);
-        log.info("Подборка успешно сохранена: {}", savedCompilation);
+        log.info("Подборка сохранена: {}", savedCompilation);
 
         return compilationMapper.mapToCompilationDto(savedCompilation);
     }
@@ -85,7 +85,7 @@ public class CompilationServiceDefault implements CompilationServicePublic, Comp
     public void deleteCompilation(long compId) {
         compilationExists(compId);
         compilationRepository.deleteById(compId);
-        log.info("Подборка с compId: {} успешно удалена", compId);
+        log.info("Подборка с compId: {} удалена", compId);
     }
 
     /**
@@ -98,7 +98,7 @@ public class CompilationServiceDefault implements CompilationServicePublic, Comp
         compilationMapper.updateCompilationFromPatch(compilation, compilationPatch, events);
 
         Compilation updatedCompilation = compilationRepository.save(compilation);
-        log.info("Подборка успешно обновлена: {}", updatedCompilation);
+        log.info("Подборка обновлена: {}", updatedCompilation);
 
         return compilationMapper.mapToCompilationDto(updatedCompilation);
     }

@@ -22,7 +22,7 @@ public class CategoryControllerAdminImpl implements CategoryControllerAdmin {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto save(@RequestBody CategoryChange categoryRequest) {
-        log.info("Запрос от клиента на добавление новой категории: {}", categoryRequest);
+        log.info("[ADMIN] Добавление новой категории: {}", categoryRequest);
         return categoryService.save(categoryRequest);
     }
 
@@ -31,7 +31,7 @@ public class CategoryControllerAdminImpl implements CategoryControllerAdmin {
     @ResponseStatus(HttpStatus.OK)
     public CategoryDto update(@RequestBody CategoryChange categoryRequest,
                               @PathVariable Long catId) {
-        log.info("Запрос от клиента на изменение существующей категории с catId: {}, request: {}", catId, categoryRequest);
+        log.info("[ADMIN] Изменение существующей категории с catId: {}, request: {}", catId, categoryRequest);
         return categoryService.update(categoryRequest, catId);
     }
 
@@ -39,7 +39,7 @@ public class CategoryControllerAdminImpl implements CategoryControllerAdmin {
     @DeleteMapping("/{catId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long catId) {
-        log.info("Запрос от клиента на удаление категории с catId: {}", catId);
+        log.info("[ADMIN] Удаление категории с catId: {}", catId);
         categoryService.delete(catId);
     }
 }

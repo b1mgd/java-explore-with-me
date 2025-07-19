@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class CompilationPatch {
 
     private Boolean pinned;

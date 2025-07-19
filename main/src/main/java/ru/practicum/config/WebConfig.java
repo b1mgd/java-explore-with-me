@@ -11,6 +11,7 @@ import java.util.Locale;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
     @Override
     public void addFormatters(FormatterRegistry registry) {
 

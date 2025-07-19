@@ -10,7 +10,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: false
   sql:
     init:
       mode: always
@@ -19,6 +18,3 @@ logging:
   level:
     root: info
     ru.practicum: info
-#    org.springframework.web: DEBUG
-#    org.springframework.http.converter: DEBUG
-#    org.springframework.web.servlet.mvc.method.annotation: DEBUG

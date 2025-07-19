@@ -10,7 +10,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: false
+    show-sql: true
 
 logging:
   level:

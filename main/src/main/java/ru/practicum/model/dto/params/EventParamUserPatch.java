@@ -3,8 +3,7 @@ package ru.practicum.model.dto.params;
 import lombok.*;
 import ru.practicum.model.dto.EventUserPatch;
 
-@Getter
-@Setter
+@Data
 @Builder
 @AllArgsConstructor
 public class EventParamUserPatch {

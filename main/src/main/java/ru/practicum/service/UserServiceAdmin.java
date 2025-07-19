@@ -6,11 +6,11 @@ import ru.practicum.model.dto.UserPost;
 
 import java.util.List;
 
-public interface UserService {
+public interface UserServiceAdmin {
 
     List<UserDto> findAllUsers(UserParamAdminFindAll param);
 
     UserDto save(UserPost userPost);
 
-    void delete(Long userId);
+    void delete(long userId);
 }

@@ -7,6 +7,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.BadRequestException;
@@ -60,8 +62,14 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         int size = param.getSize();
         userExists(userId);
 
-        List<Event> events = eventRepository.findAllEvents(userId, from, size);
-        log.info("Найдены мероприятия по запросу: {}", events);
+        Pageable pageable = PageRequest.of(
+                from / size,
+                size,
+                org.springframework.data.domain.Sort.by("id")
+        );
+
+        List<Event> events = eventRepository.findAllByInitiator_Id(userId, pageable);
+        log.info("Получен список событий: {}", events);
 
         return events.stream()
                 .map(eventMapper::mapToEventShortDto)
@@ -78,8 +86,9 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         User initiator = getUserById(userId);
         Category category = getCategoryById(eventPost.getCategory());
         Event event = eventMapper.mapToEvent(initiator, category, eventPost);
+
         Event savedEvent = eventRepository.save(event);
-        log.info("Мероприятие сохранено: {}", savedEvent);
+        log.info("Событие сохранено: {}", savedEvent);
 
         return eventMapper.mapToEventDto(savedEvent);
     }
@@ -91,7 +100,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
     @Transactional(readOnly = true)
     public EventDto findSavedEventById(long userId, long eventId) {
         Event event = getEventByUserIdAndId(userId, eventId);
-        log.info("Найдено мероприятие: {}", event);
+        log.info("Получено событие: {}", event);
 
         return eventMapper.mapToEventDto(event);
     }
@@ -104,32 +113,15 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         long userId = param.getUserId();
         long eventId = param.getEventId();
         EventUserPatch eventPatch = param.getEventPatch();
-        State state;
-
-        if (eventPatch.getStateAction() != null) {
-            state = switch (eventPatch.getStateAction()) {
-                case SEND_TO_REVIEW -> State.PENDING;
-                case CANCEL_REVIEW -> State.CANCELED;
-            };
-        } else {
-            state = State.PENDING;
-        }
+        State state = getState(eventPatch);
 
         eventUserPatchCorrect(userId, eventId, eventPatch);
-
         Event event = getEventByUserIdAndId(userId, eventId);
-        Category category;
-
-        if (eventPatch.getCategory() != null) {
-            category = getCategoryById(eventPatch.getCategory());
-
-        } else {
-            category = event.getCategory();
-        }
+        Category category = getCategory(eventPatch, event);
         eventMapper.updateEventFromUserPatch(event, category, state, eventPatch);
 
         Event updatedEvent = eventRepository.save(event);
-        log.info("Мероприятие обновлено: {}", updatedEvent);
+        log.info("Событие обновлено: {}", updatedEvent);
 
         return eventMapper.mapToEventDto(updatedEvent);
     }
@@ -142,7 +134,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
     public List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(long userId, long eventId) {
         List<ParticipationRequest> requests = requestRepository.findAllByEvent_Initiator_idAndEvent_Id(userId, eventId);
 
-        log.info("Найдены запросы на участие в событии: {}", requests);
+        log.info("Получен список запросов на участие в событии: {}", requests);
 
         return requests.stream()
                 .map(requestMapper::mapToRequestDto)
@@ -151,12 +143,6 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
 
     /**
      * [PRIVATE] Модерация всех направленных заявок на участие в событии пользователя
-     */
-    /*
-    1) лимит заявок = 0 или премодерация заявок = false -> подтверждение заявок не требуется
-    2) нельзя подтвердить заявку если достигнут лимит заявок -> 409
-    3) статус можно изменить только у заявок в состоянии ожидания -> 409
-    4) если при подтверждении заявок лимит был исчерпан - остальные заявки отменяем автоматически
      */
     @Override
     public EventStatusUpdateDto reviewAllEventParticipationRequests(EventParamParticipationStatus param) {
@@ -174,18 +160,10 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
             case REJECTED -> Status.REJECTED;
         };
 
-        if (status == Status.CONFIRMED && participants >= limit) {
-            throw new ConflictException(String.format("На событие зарегистрировано максимальное количество участников. " +
-                    "Participants: %d. Limit: %d ", participants, limit));
-        }
+        participantsLimitReached(status, participants, limit);
 
         List<ParticipationRequest> requests = requestRepository.findAllByIdIn(requestIds);
-
-        for (ParticipationRequest request : requests) {
-            if (request.getStatus() != Status.PENDING) {
-                throw new ConflictException("Заявка уже была отработана со статусом: " + request.getStatus());
-            }
-        }
+        requestsStatusPending(requests);
 
         List<ParticipationRequest> confirmedRequests;
         List<ParticipationRequest> rejectedRequests;
@@ -223,8 +201,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         event.setConfirmedRequests(participants);
         eventRepository.save(event);
 
-        log.info("Результаты разбора заявок. confirmed requests: {}, rejectedRequests: {}", confirmedRequests, rejectedRequests);
-
+        log.info("Разбор заявок. confirmed requests: {}, rejectedRequests: {}", confirmedRequests, rejectedRequests);
 
         return EventStatusUpdateDto.builder()
                 .confirmedRequests(
@@ -247,7 +224,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
     @Transactional(readOnly = true)
     public List<EventDto> findAllEvents(EventParamFindAllAdmin param) {
         List<Event> events = findAllByQueryDSLAdmin(param);
-        log.info("Получены результаты в соответствии с динамическим запросом от администратора: {}", events);
+        log.info("Получен список событий по параметрам динамического запроса: {}", events);
 
         return events.stream()
                 .map(eventMapper::mapToEventDto)
@@ -260,25 +237,10 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
     @Override
     public EventDto updateEventAdmin(long eventId, EventAdminPatch eventPatch) {
         eventAdminPatchCorrect(eventId, eventPatch);
-        State state;
 
-        if (eventPatch.getStateAction() != null) {
-            state = switch (eventPatch.getStateAction()) {
-                case PUBLISH_EVENT -> State.PUBLISHED;
-                case REJECT_EVENT -> State.CANCELED;
-            };
-        } else {
-            state = State.PENDING;
-        }
-
+        State state = getState(eventPatch);
         Event event = getEventByIdAdmin(eventId);
-        Category category;
-
-        if (eventPatch.getCategory() != null) {
-            category = getCategoryById(eventPatch.getCategory());
-        } else {
-            category = event.getCategory();
-        }
+        Category category = getCategory(eventPatch, event);
 
         eventMapper.updateEventFromAdminPatch(event, category, state, eventPatch);
 
@@ -303,7 +265,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
             );
         }
 
-        collectionContainsNull(param.getCategories());
+        collectionHasNoNulls(param.getCategories());
 
         List<Event> events = findAllByQueryDSLPublic(param);
 
@@ -355,7 +317,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
 
         List<Event> updatedEvents = eventRepository.saveAll(events);
 
-        log.info("Получены результаты в соответствии с динамическим публичным запросом : {}", updatedEvents);
+        log.info("Получен список событий по динамическим параметрам: {}", updatedEvents);
 
         return events.stream()
                 .map(eventMapper::mapToEventShortDto)
@@ -394,8 +356,22 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         return eventMapper.mapToEventDto(event);
     }
 
+    private void participantsLimitReached(Status status, long participants, long limit) {
+        if (status == Status.CONFIRMED && participants >= limit) {
+            throw new ConflictException(String.format("На событие зарегистрировано максимальное количество участников. " +
+                    "Participants: %d. Limit: %d ", participants, limit));
+        }
+    }
 
-    private void collectionContainsNull(List<Category> categories) {
+    private void requestsStatusPending(List<ParticipationRequest> requests) {
+        for (ParticipationRequest request : requests) {
+            if (request.getStatus() != Status.PENDING) {
+                throw new ConflictException("Заявка уже была отработана со статусом: " + request.getStatus());
+            }
+        }
+    }
+
+    private void collectionHasNoNulls(List<Category> categories) {
         if (categories != null && categories.stream().anyMatch(Objects::isNull)) {
             throw new BadRequestException("Поиск по категориям не принимает null");
         }
@@ -430,17 +406,17 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
 
     private void eventUserPostCorrect(long userId, EventUserPost eventUserPost) {
         LocalDateTime eventDate = eventUserPost.getEventDate();
-        eventDateCorrectPrivate(eventDate);
+        eventDateCorrectUser(eventDate);
     }
 
     private void eventUserPatchCorrect(long userId, long eventId, EventUserPatch eventUserPatch) {
-        eventPublished(eventId);
+        eventNotPublished(eventId);
         if (eventUserPatch.getEventDate() != null) {
-            eventDateCorrectPrivate(eventUserPatch.getEventDate());
+            eventDateCorrectUser(eventUserPatch.getEventDate());
         }
 
         Event event = getEventByUserIdAndId(userId, eventId);
-        eventDateCorrectPrivate(event.getEventDate());
+        eventDateCorrectUser(event.getEventDate());
     }
 
     private void userExists(long userId) {
@@ -451,7 +427,7 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         }
     }
 
-    private void eventDateCorrectPrivate(LocalDateTime dateTime) {
+    private void eventDateCorrectUser(LocalDateTime dateTime) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime referenceDateTime = dateTime.minusHours(2);
 
@@ -460,11 +436,33 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
         }
     }
 
-    private void eventPublished(long eventId) {
+    private void eventNotPublished(long eventId) {
         State state = eventRepository.findStateById(eventId);
 
         if (state.equals(State.PUBLISHED)) {
             throw new ConflictException("Внесение изменений в опубликованное мероприятие не допускается");
+        }
+    }
+
+    private State getState(EventUserPatch eventPatch) {
+        if (eventPatch.getStateAction() != null) {
+            return switch (eventPatch.getStateAction()) {
+                case SEND_TO_REVIEW -> State.PENDING;
+                case CANCEL_REVIEW -> State.CANCELED;
+            };
+        } else {
+            return State.PENDING;
+        }
+    }
+
+    private State getState(EventAdminPatch eventPatch) {
+        if (eventPatch.getStateAction() != null) {
+            return switch (eventPatch.getStateAction()) {
+                case PUBLISH_EVENT -> State.PUBLISHED;
+                case REJECT_EVENT -> State.CANCELED;
+            };
+        } else {
+            return State.PENDING;
         }
     }
 
@@ -488,9 +486,27 @@ public class EventServiceDefault implements EventServicePrivate, EventServicePub
                 .orElseThrow(() -> new NotFoundException(String.format("Пользователь с userId: %d не был найден", userId)));
     }
 
+    private Category getCategory(EventUserPatch eventPatch, Event event) {
+        if (eventPatch.getCategory() != null) {
+            return getCategoryById(eventPatch.getCategory());
+
+        } else {
+            return event.getCategory();
+        }
+    }
+
+    private Category getCategory(EventAdminPatch eventPatch, Event event) {
+        if (eventPatch.getCategory() != null) {
+            return getCategoryById(eventPatch.getCategory());
+
+        } else {
+            return event.getCategory();
+        }
+    }
+
     private Category getCategoryById(long catId) {
         return categoryRepository.findById(catId)
-                .orElseThrow(() -> new NotFoundException(String.format("Категория с catId: %d не была найден", catId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Категория с catId: %d не была найдена", catId)));
     }
 
     private List<Event> findAllByQueryDSLAdmin(EventParamFindAllAdmin param) {

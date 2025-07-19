@@ -2,8 +2,7 @@ package ru.practicum.model.dto.params;
 
 import lombok.*;
 
-@Getter
-@Setter
+@Data
 @Builder
 @AllArgsConstructor
 public class EventParamFindAllUserEvents {

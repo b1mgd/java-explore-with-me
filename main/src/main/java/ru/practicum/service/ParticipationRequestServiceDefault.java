@@ -36,7 +36,7 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
     public List<ParticipationRequestDto> findAllUserRequests(long userId) {
         userExists(userId);
         List<ParticipationRequest> requests = requestRepository.findAllByRequester_Id(userId);
-        log.info("Получены заявки пользователя: {}", requests);
+        log.info("Получены заявки на участие в событиях: {}", requests);
 
         return requests.stream()
                 .map(requestMapper::mapToRequestDto)
@@ -47,14 +47,7 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
     public ParticipationRequestDto createRequest(long userId, long eventId) {
         Event event = getEventById(eventId);
         validateCreateRequest(event, userId);
-        Status status;
-
-        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
-            status = Status.CONFIRMED;
-        } else {
-            status = Status.PENDING;
-        }
-
+        Status status = getStatus(event);
         User requester = getUserById(userId);
 
         ParticipationRequest request = ParticipationRequest.builder()
@@ -64,11 +57,7 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
                 .build();
 
         ParticipationRequest savedRequest = requestRepository.save(request);
-
-        if (status == Status.CONFIRMED) {
-            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            eventRepository.save(event);
-        }
+        updateEvent(status, event);
 
         log.info("Запрос на участие в событии сохранен: {}", savedRequest);
 
@@ -78,9 +67,8 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
     @Override
     public ParticipationRequestDto cancelRequest(long userId, long requestId) {
         ParticipationRequest request = getRequestById(requestId);
-        Status status = Status.CANCELED;
+        requestMapper.updateRequest(request, Status.CANCELED);
 
-        request.setStatus(status);
         ParticipationRequest updatedRequest = requestRepository.save(request);
         log.info("Заявка на участие в событии отменена: {}", updatedRequest);
 
@@ -99,23 +87,35 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
         boolean exists = requestRepository.existsByRequester_IdAndEvent_Id(userId, event.getId());
 
         if (exists) {
-            throw new ConflictException(String.format("Добавление повторного запроса от пользователя userId: %d " +
-                    "к событию eventId: %d не допускается", userId, event.getId()));
+            throw new ConflictException(String.format("Повторный запрос от пользователя с userId: %d " +
+                    "к событию с eventId: %d не допускается", userId, event.getId()));
         }
 
         if (event.getInitiator().getId() == userId) {
-            throw new ConflictException("Инициатор запроса не может быть участком в своем событии");
+            throw new ConflictException("Инициатор запроса не может быть участником в созданным им событии");
         }
 
         if (!event.getState().equals(State.PUBLISHED)) {
             throw new ConflictException("Принять участие можно только в опубликованном событии");
         }
 
-        System.out.println("event.getParticipantLimit() = " + event.getParticipantLimit());
-        System.out.println("event.getConfirmedRequests() = " + event.getConfirmedRequests());
-
         if (event.getParticipantLimit() != 0 && (event.getParticipantLimit() <= event.getConfirmedRequests())) {
-            throw new ConflictException("Достигнуто максимальное количество участников");
+            throw new ConflictException("Достигнуто максимальное количество участников: " + event.getParticipantLimit());
+        }
+    }
+
+    private void updateEvent(Status status, Event event) {
+        if (status == Status.CONFIRMED) {
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+            eventRepository.save(event);
+        }
+    }
+
+    private Status getStatus(Event event) {
+        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
+            return Status.CONFIRMED;
+        } else {
+            return Status.PENDING;
         }
     }
 
@@ -132,6 +132,6 @@ public class ParticipationRequestServiceDefault implements ParticipationRequestS
 
     private ParticipationRequest getRequestById(long requestId) {
         return requestRepository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException(String.format("Запрос на участие с eventId: %d не был найден", requestId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Заявка на участие в событии с requestId: %d не была найдена", requestId)));
     }
 }

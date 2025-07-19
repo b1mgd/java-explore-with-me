@@ -23,7 +23,7 @@ public class CompilationControllerAdminImpl implements CompilationControllerAdmi
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@RequestBody CompilationPost compilationPost) {
-        log.info("Запрос от администратора на добавление подборки: {}", compilationPost);
+        log.info("[ADMIN] Добавление подборки: {}", compilationPost);
         return compilationService.createCompilation(compilationPost);
     }
 
@@ -31,7 +31,7 @@ public class CompilationControllerAdminImpl implements CompilationControllerAdmi
     @DeleteMapping("/{compId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable Long compId) {
-        log.info("Запрос от администратора на удаление подборки с compId: {}", compId);
+        log.info("[ADMIN] Удаление подборки с compId: {}", compId);
         compilationService.deleteCompilation(compId);
     }
 
@@ -40,7 +40,7 @@ public class CompilationControllerAdminImpl implements CompilationControllerAdmi
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto updateCompilation(@PathVariable Long compId,
                                             @RequestBody CompilationPatch compilationPatch) {
-        log.info("Запрос от администратора на изменение подборки с compId: {}. compilationPatch: {}", compId, compilationPatch);
+        log.info("[ADMIN] Изменение подборки с compId: {}. compilationPatch: {}", compId, compilationPatch);
         return compilationService.updateCompilation(compId, compilationPatch);
     }
 }

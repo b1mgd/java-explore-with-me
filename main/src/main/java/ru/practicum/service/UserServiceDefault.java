@@ -2,7 +2,9 @@ package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.exception.ConflictException;
@@ -21,23 +23,27 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceDefault implements UserService {
+public class UserServiceDefault implements UserServiceAdmin {
 
     private final UserRepository userRepository;
+
     private final UserMapper userMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<UserDto> findAllUsers(UserParamAdminFindAll param) {
-        List<User> users;
+        List<Long> ids = param.getIds();
+        int from = param.getFrom();
+        int size = param.getSize();
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by("id"));
 
-        if (param.getIds().isEmpty()) {
-            users = userRepository.findAllUsers(param.getFrom(), param.getSize());
-        } else {
-            users = userRepository.findAllUsers(param.getIds(), param.getFrom(), param.getSize());
-        }
+        List<User> users = ids.isEmpty() ?
+                userRepository.findAll(pageable)
+                        .stream()
+                        .toList() :
+                userRepository.findAllByIdIn(ids, pageable);
 
-        log.info("Найдены пользователи, удовлетворяющие запросу: {}", users);
+        log.info("Найден список пользователей: {}", users);
 
         return users.stream()
                 .map(userMapper::mapToUserDto)
@@ -47,28 +53,34 @@ public class UserServiceDefault implements UserService {
     @Override
     public UserDto save(UserPost userPost) {
         User user = userMapper.mapToUser(userPost);
+        emailUnique(userPost.getEmail());
 
-        try {
-            User savedUser = userRepository.save(user);
-            log.info("Пользователь успешно сохранен: {}", savedUser);
-            return userMapper.mapToUserDto(savedUser);
-        } catch (DataIntegrityViolationException e) {
-            throw new ConflictException(e.getMessage());
-        }
+        User savedUser = userRepository.save(user);
+        log.info("Пользователь сохранен: {}", savedUser);
+
+        return userMapper.mapToUserDto(savedUser);
     }
 
     @Override
-    public void delete(Long userId) {
-        checkUserExists(userId);
+    public void delete(long userId) {
+        userExists(userId);
         userRepository.deleteById(userId);
-        log.info("Пользователь с userId: {} успешно удален", userId);
+        log.info("Пользователь с userId: {} удален", userId);
     }
 
-    private void checkUserExists(Long userId) {
+    private void userExists(long userId) {
         boolean exists = userRepository.existsById(userId);
 
         if (!exists) {
-            throw new NotFoundException("Пользователь не найден или недоступен");
+            throw new NotFoundException(String.format("Пользователь c userId: %d не найден", userId));
+        }
+    }
+
+    private void emailUnique(String email) {
+        boolean exists = userRepository.existsByEmail(email);
+
+        if (exists) {
+            throw new ConflictException(String.format("Пользователь с email: %s уже зарегистрирован", email));
         }
     }
 }

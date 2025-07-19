@@ -26,9 +26,7 @@ public class CompilationControllerPublicImpl implements CompilationControllerPub
     public List<CompilationDto> findAllCompilations(@RequestParam(defaultValue = "false") Boolean pinned,
                                                     @RequestParam(defaultValue = "0") Integer from,
                                                     @RequestParam(defaultValue = "10") Integer size) {
-        log.info("Публичный запрос от клиента на получение списка мероприятий по параметрам. " +
-                "pinned: {}, from: {}, size: {}", pinned, from, size);
-
+        log.info("[PUBLIC] Получение списка подборок по параметрам. pinned: {}, from: {}, size: {}", pinned, from, size);
         return compilationService.findAllCompilations(
                 CompilationParamFindAllPublic.builder()
                         .pinned(pinned)
@@ -42,7 +40,7 @@ public class CompilationControllerPublicImpl implements CompilationControllerPub
     @GetMapping("/{compId}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto findById(@PathVariable Long compId) {
-        log.info("Публичный запрос от клиента на просмотр подборки с compId: {}", compId);
+        log.info("[PUBLIC] Получение подборки. compId: {}", compId);
         return compilationService.findById(compId);
     }
 }

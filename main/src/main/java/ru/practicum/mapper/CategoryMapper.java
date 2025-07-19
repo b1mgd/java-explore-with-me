@@ -10,9 +10,6 @@ public interface CategoryMapper {
 
     Category mapToCategory(CategoryChange categoryRequest);
 
-    @Mapping(target = "id", source = "id")
-    Category mapToCategory(long id, CategoryChange categoryRequest);
-
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void mapToCategoryFromCategoryPatch(@MappingTarget Category category,
                                         CategoryChange categoryChange);

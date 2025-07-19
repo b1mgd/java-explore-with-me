@@ -1,5 +1,6 @@
 package ru.practicum.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.model.entity.Event;
 import ru.practicum.model.entity.utility.State;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,16 +17,7 @@ import java.util.Optional;
 public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPredicateExecutor<Event> {
 
     @EntityGraph(attributePaths = {"initiator", "category"})
-    @Query(value = """
-            SELECT e FROM Event e
-            WHERE e.initiator.id = :userId
-            ORDER BY e.id
-            LIMIT :size
-            OFFSET :from
-            """)
-    List<Event> findAllEvents(@Param("userId") long userId,
-                              @Param("from") int from,
-                              @Param("size") int size);
+    List<Event> findAllByInitiator_Id(long userId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"initiator", "category"})
     Optional<Event> findByInitiator_IdAndId(@Param("userId") long userId,

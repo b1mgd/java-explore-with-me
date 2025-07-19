@@ -1,5 +1,6 @@
 package ru.practicum.model.dto.params;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import ru.practicum.model.entity.Category;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Data
 @Builder
+@AllArgsConstructor
 public class EventParamFindAllPublic {
     private String text;
     private List<Category> categories;
@@ -18,6 +20,6 @@ public class EventParamFindAllPublic {
     private LocalDateTime rangeEnd;
     private Boolean onlyAvailable;
     private Sort sort;
-    private Integer from;
-    private Integer size;
+    private int from;
+    private int size;
 }
