@@ -56,6 +56,9 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${compiler.version}</version>
                     <configuration>
+                        <compilerArgs>
+                            <arg>-parameters</arg>
+                        </compilerArgs>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
                         <annotationProcessorPaths>
