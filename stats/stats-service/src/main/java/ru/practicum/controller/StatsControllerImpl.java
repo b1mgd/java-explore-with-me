@@ -19,13 +19,14 @@ import java.util.List;
 @Validated
 @Slf4j
 public class StatsControllerImpl implements StatsController {
+
     private final StatsService statsService;
 
     @Override
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
     public HitDto save(@RequestBody HitPost hitPost) {
-        log.info("Сервером получен запрос на сохранение посещения: {}", hitPost);
+        log.info("StatsService: Сохранение посещения: {}", hitPost);
         return statsService.save(hitPost);
     }
 
@@ -36,7 +37,7 @@ public class StatsControllerImpl implements StatsController {
                                        @RequestParam LocalDateTime end,
                                        @RequestParam(required = false) List<String> uris,
                                        @RequestParam(defaultValue = "false") Boolean unique) {
-        log.info("Сервером получен запрос на предоставление статистики со следующими параметрами. " +
+        log.info("Получение списка StatsDto по параметрам. " +
                 "start: {}, end: {}, uri: {}, unique: {}", start, end, uris, unique);
 
         return statsService.findAllStats(start, end, uris, unique);

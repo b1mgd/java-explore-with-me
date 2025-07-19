@@ -20,7 +20,9 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 public class StatsRepositoryImpl implements StatsRepository {
+
     private final JdbcTemplate jdbcTemplate;
+
     private final StatsRowMapper statsRowMapper;
 
     /**
@@ -30,6 +32,7 @@ public class StatsRepositoryImpl implements StatsRepository {
         String sql = """
                 INSERT INTO hits (app, uri, ip, timestamp)
                 VALUES (?, ?, ?, ?)
+                RETURNING id
                 """;
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
