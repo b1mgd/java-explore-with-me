@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface StatClient {
 
-    HitDto save(HitPost hitPost);
+    HitDto hit(HitPost hitPost);
 
     List<StatsDto> findAllStats(LocalDateTime start, LocalDateTime end, List<String> uri, Boolean unique);
 }

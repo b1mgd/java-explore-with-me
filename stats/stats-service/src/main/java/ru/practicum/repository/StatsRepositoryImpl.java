@@ -20,7 +20,9 @@ import java.util.stream.Collectors;
 @Repository
 @RequiredArgsConstructor
 public class StatsRepositoryImpl implements StatsRepository {
+
     private final JdbcTemplate jdbcTemplate;
+
     private final StatsRowMapper statsRowMapper;
 
     /**
