@@ -19,5 +19,7 @@ public interface EventControllerPrivate {
 
     List<ParticipationRequestDto> findAllOtherUsersParticipationRequests(@Positive Long userId, @Positive Long eventId);
 
-    EventStatusUpdateDto reviewAllEventParticipationRequests(@Positive Long userId, @Positive Long eventId, @Valid EventStatusUpdateRequest eventStatusUpdateRequest);
+    EventStatusUpdateDto reviewAllEventParticipationRequests(@Positive Long userId,
+                                                             @Positive Long eventId,
+                                                             @Valid EventStatusUpdateRequest eventStatusUpdateRequest);
 }
