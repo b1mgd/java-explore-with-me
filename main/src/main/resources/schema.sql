@@ -54,3 +54,12 @@ CREATE TABLE IF NOT EXISTS compilation_events
     event_id       BIGINT NOT NULL REFERENCES events (id),
     PRIMARY KEY (compilation_id, event_id)
 );
+
+CREATE TABLE IF NOT EXISTS event_ratings
+(
+    id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    is_like    BOOLEAN                     NOT NULL,
+    created_on TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    user_id    BIGINT                      NOT NULL REFERENCES users (id),
+    event_id   BIGINT                      NOT NULL REFERENCES events (id)
+);
